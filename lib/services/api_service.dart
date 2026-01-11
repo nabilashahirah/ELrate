@@ -10,6 +10,7 @@ class ApiService {
   static const String _getCoursesUrl = AppConstants.getCoursesUrl;
   static const String _submitReviewUrl = AppConstants.submitReviewUrl;
   static const String _getReviewsUrl = AppConstants.getReviewsUrl;
+  static const String _getHarshWordsUrl = AppConstants.getHarshWordsUrl;
 
   // Singleton pattern
   static final ApiService _instance = ApiService._internal();
@@ -77,6 +78,24 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Error submitting review: $e');
+    }
+  }
+
+  /// Fetch list of harsh words for content moderation
+  Future<List<String>> getHarshWords() async {
+    try {
+      final response = await http.get(Uri.parse(_getHarshWordsUrl));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonData = json.decode(response.body);
+        return jsonData.map((e) => e.toString()).toList();
+      } else {
+        // Fallback to local constants if API fails
+        return AppConstants.harshWords;
+      }
+    } catch (e) {
+      // Fallback to local constants on error
+      return AppConstants.harshWords;
     }
   }
 }

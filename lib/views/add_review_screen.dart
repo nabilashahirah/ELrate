@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/add_review_viewmodel.dart';
+import '../utils/constants.dart';
+import '../services/api_service.dart';
 
 class AddReviewScreen extends StatelessWidget {
   final String courseId;
@@ -27,6 +29,26 @@ class _AddReviewView extends StatefulWidget {
 
 class _AddReviewViewState extends State<_AddReviewView> {
   final TextEditingController _commentController = TextEditingController();
+  List<String> _harshWords = AppConstants.harshWords; // Initialize with fallback
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHarshWords();
+  }
+
+  Future<void> _fetchHarshWords() async {
+    try {
+      final words = await ApiService().getHarshWords();
+      if (mounted) {
+        setState(() {
+          _harshWords = words;
+        });
+      }
+    } catch (_) {
+      // Keep using default list if fetch fails
+    }
+  }
 
   @override
   void dispose() {
@@ -34,7 +56,30 @@ class _AddReviewViewState extends State<_AddReviewView> {
     super.dispose();
   }
 
+  bool _containsHarshWords(String text) {
+    // Basic list of inappropriate words for academic context
+    final lowerText = text.toLowerCase();
+    for (final word in _harshWords) {
+      // Check for whole words to avoid false positives (e.g., "class" containing "ass")
+      if (RegExp(r'\b' + RegExp.escape(word) + r'\b').hasMatch(lowerText)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Future<void> _submitReview(BuildContext context) async {
+    if (_containsHarshWords(_commentController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please keep reviews professional. Harsh language is not allowed."),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     final viewModel = context.read<AddReviewViewModel>();
     final success = await viewModel.submitReview(_commentController.text);
 
