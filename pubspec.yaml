@@ -32,6 +32,9 @@ dependencies:
     sdk: flutter
   http: ^1.1.0  # ONLY HTTP. No Firebase!
   provider: ^6.1.1
+  shared_preferences: ^2.2.2  # Local storage for auth tokens
+  encrypt: ^5.0.3  # AES encryption for secure data storage
+  flutter_secure_storage: ^9.0.0  # Secure keychain/keystore storage
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
