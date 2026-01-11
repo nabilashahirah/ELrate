@@ -5,7 +5,6 @@ import 'viewmodels/search_viewmodel.dart';
 import 'viewmodels/profile_viewmodel.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'views/main_navigation.dart';
-import 'views/auth/login_screen.dart';
 import 'views/splash_intro_screen.dart';
 
 void main() {
