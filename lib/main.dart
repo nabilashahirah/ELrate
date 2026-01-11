@@ -25,13 +25,33 @@ class ELRateApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'ELRate',
         theme: ThemeData(
-          primaryColor: Color(0xFF800000), // UPM Maroon
-          scaffoldBackgroundColor: Colors.grey[50],
           useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Color(0xFF800000), // UPM Maroon
+            primary: Color(0xFF800000),
+            secondary: Color(0xFFD4AF37), // Gold accent
+            surface: Colors.grey[50],
+          ),
+          scaffoldBackgroundColor: Colors.grey[50],
           appBarTheme: AppBarTheme(
             backgroundColor: Color(0xFF800000),
             foregroundColor: Colors.white,
             elevation: 0,
+            centerTitle: true,
+            titleTextStyle: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          cardTheme: CardThemeData(
+            elevation: 0,
+            color: Colors.white,
+            margin: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.grey.shade200),
+            ),
           ),
         ),
         home: AuthWrapper(),
@@ -68,21 +88,19 @@ class _AuthWrapperState extends State<AuthWrapper> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.school,
-                    size: 80,
-                    color: Color(0xFF800000),
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    "ELRate",
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF800000).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.school,
+                      size: 64,
                       color: Color(0xFF800000),
                     ),
                   ),
-                  SizedBox(height: 40),
+                  SizedBox(height: 32),
                   CircularProgressIndicator(
                     color: Color(0xFF800000),
                   ),

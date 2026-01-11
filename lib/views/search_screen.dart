@@ -34,7 +34,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Search Courses"),
+        title: Text("Find Courses"),
         elevation: 0,
       ),
       body: Column(
@@ -113,9 +113,10 @@ class _SearchScreenState extends State<SearchScreen> {
 
                 return RefreshIndicator(
                   onRefresh: () => viewModel.refresh(),
-                  child: ListView.builder(
-                    padding: EdgeInsets.all(15),
+                  child: ListView.separated(
+                    padding: EdgeInsets.all(20),
                     itemCount: viewModel.searchResults.length,
+                    separatorBuilder: (context, index) => SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       return _buildCourseCard(context, viewModel.searchResults[index]);
                     },
@@ -131,8 +132,10 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildSearchInput() {
     return Container(
-      color: Color(0xFF800000),
-      padding: EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Color(0xFF800000),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 30),
       child: Consumer<SearchViewModel>(
         builder: (context, viewModel, child) {
           return TextField(
@@ -155,7 +158,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     )
                   : null,
               filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.2),
+              fillColor: Colors.white.withOpacity(0.2),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide.none,
@@ -177,8 +180,17 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildFilters() {
     return Container(
-      color: Colors.grey[100],
-      padding: EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
       child: Consumer<SearchViewModel>(
         builder: (context, viewModel, child) {
           return Column(
@@ -213,9 +225,17 @@ class _SearchScreenState extends State<SearchScreen> {
                                 viewModel.updateFacultyFilter(faculty);
                               },
                               selectedColor: Color(0xFF800000),
-                              backgroundColor: Colors.white,
+                              backgroundColor: Colors.grey[200],
+                              checkmarkColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                side: BorderSide(
+                                  color: Colors.transparent,
+                                ),
+                              ),
                               labelStyle: TextStyle(
                                 color: isSelected ? Colors.white : Colors.grey[700],
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                 fontSize: 12,
                               ),
                             ),
@@ -284,52 +304,9 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildCourseCard(BuildContext context, Course course) {
     return Card(
       elevation: 2,
-      margin: EdgeInsets.only(bottom: 15),
-      child: ListTile(
-        contentPadding: EdgeInsets.all(15),
-        leading: CircleAvatar(
-          backgroundColor: Color(0xFF800000).withValues(alpha: 0.1),
-          child: Text(
-            course.id.substring(0, 3),
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF800000),
-              fontSize: 12,
-            ),
-          ),
-        ),
-        title: Text(
-          course.id,
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(course.name),
-            SizedBox(height: 5),
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    course.facultyShort,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Spacer(),
-                Icon(Icons.star, size: 14, color: Colors.amber),
-                Text(" ${course.averageRating.toStringAsFixed(1)} (${course.totalReviews})"),
-              ],
-            ),
-          ],
-        ),
+      shadowColor: Colors.black12,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: () async {
           await Navigator.push(
             context,
@@ -341,7 +318,98 @@ class _SearchScreenState extends State<SearchScreen> {
             context.read<SearchViewModel>().refresh();
           }
         },
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Color(0xFF800000).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  course.id.substring(0, min(3, course.id.length)),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF800000),
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      course.id,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF800000),
+                        fontSize: 12,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      course.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            course.facultyShort,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+                        Icon(Icons.star_rounded, size: 16, color: Colors.amber),
+                        SizedBox(width: 4),
+                        Text(
+                          course.averageRating.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          " (${course.totalReviews})",
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
+
+  int min(int a, int b) => a < b ? a : b;
 }

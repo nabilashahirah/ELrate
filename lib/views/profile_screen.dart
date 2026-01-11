@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'auth/login_screen.dart';
+import '../models/review.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -66,21 +67,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = viewModel.user;
 
     return Container(
-      color: Color(0xFF800000),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF800000),
+            Color(0xFFA00000),
+          ],
+        ),
+      ),
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+      padding: EdgeInsets.fromLTRB(20, 40, 20, 40),
       child: Column(
         children: [
           // Avatar
-          CircleAvatar(
-            radius: 50,
-            backgroundColor: Colors.white,
-            child: Text(
-              user?.initials ?? 'U',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF800000),
+          Container(
+            padding: EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.2),
+            ),
+            child: CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.white,
+              child: Text(
+                user?.initials ?? 'U',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF800000),
+                ),
               ),
             ),
           ),
@@ -102,7 +119,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
             user?.email ?? 'user@upm.edu.my',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white70,
+              color: Colors.white.withOpacity(0.8),
+            ),
+          ),
+
+          SizedBox(height: 24),
+
+          // Stats
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.rate_review_rounded, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  "${viewModel.myReviews.length} Reviews",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -111,48 +153,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileOptions(BuildContext context, ProfileViewModel viewModel) {
-    return Column(
-      children: [
-        _buildOptionTile(
-          icon: Icons.edit,
-          title: "Edit Profile",
-          onTap: () => _showEditProfileDialog(context, viewModel),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: Card(
+        elevation: 2,
+        shadowColor: Colors.black12,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Column(
+          children: [
+            _buildOptionTile(
+              icon: Icons.edit_outlined,
+              title: "Edit Profile",
+              onTap: () => _showEditProfileDialog(context, viewModel),
+            ),
+            _buildDivider(),
+            _buildOptionTile(
+              icon: Icons.settings_outlined,
+              title: "Settings",
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Settings coming soon!")),
+                );
+              },
+            ),
+            _buildDivider(),
+            _buildOptionTile(
+              icon: Icons.help_outline_rounded,
+              title: "Help & Support",
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Help & Support coming soon!")),
+                );
+              },
+            ),
+            _buildDivider(),
+            _buildOptionTile(
+              icon: Icons.info_outline_rounded,
+              title: "About",
+              onTap: () => _showAboutDialog(context),
+            ),
+            _buildDivider(),
+            _buildOptionTile(
+              icon: Icons.logout_rounded,
+              title: "Logout",
+              textColor: Colors.red,
+              onTap: () => _showLogoutDialog(context, viewModel),
+            ),
+          ],
         ),
-        Divider(height: 1),
-        _buildOptionTile(
-          icon: Icons.settings,
-          title: "Settings",
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Settings coming soon!")),
-            );
-          },
-        ),
-        Divider(height: 1),
-        _buildOptionTile(
-          icon: Icons.help_outline,
-          title: "Help & Support",
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Help & Support coming soon!")),
-            );
-          },
-        ),
-        Divider(height: 1),
-        _buildOptionTile(
-          icon: Icons.info_outline,
-          title: "About",
-          onTap: () => _showAboutDialog(context),
-        ),
-        Divider(height: 1),
-        _buildOptionTile(
-          icon: Icons.logout,
-          title: "Logout",
-          textColor: Colors.red,
-          onTap: () => _showLogoutDialog(context, viewModel),
-        ),
-      ],
+      ),
     );
+  }
+
+  Widget _buildDivider() {
+    return Divider(height: 1, thickness: 1, color: Colors.grey[100], indent: 56, endIndent: 20);
   }
 
   Widget _buildOptionTile({
@@ -176,95 +230,125 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildMyReviews(ProfileViewModel viewModel) {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.all(20),
-            child: Text(
-              "My Reviews",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+          child: Text(
+            "My Reviews",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        if (viewModel.isLoading)
+          Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(
                 color: Color(0xFF800000),
               ),
             ),
-          ),
-          if (viewModel.isLoading)
-            Center(
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: CircularProgressIndicator(
-                  color: Color(0xFF800000),
-                ),
-              ),
-            )
-          else if (viewModel.myReviews.isEmpty)
-            Center(
-              child: Padding(
-                padding: EdgeInsets.all(40),
-                child: Column(
-                  children: [
-                    Icon(Icons.rate_review_outlined, size: 60, color: Colors.grey),
-                    SizedBox(height: 16),
-                    Text(
-                      "No reviews yet",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                      ),
+          )
+        else if (viewModel.myReviews.isEmpty)
+          Center(
+            child: Padding(
+              padding: EdgeInsets.all(40),
+              child: Column(
+                children: [
+                  Icon(Icons.rate_review_outlined, size: 60, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    "No reviews yet",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
                     ),
-                    SizedBox(height: 8),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    "Start rating courses to see them here",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ListView.separated(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: viewModel.myReviews.length,
+            separatorBuilder: (context, index) => SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              return _buildReviewCard(viewModel.myReviews[index]);
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildReviewCard(Review review) {
+    return Card(
+      elevation: 2,
+      shadowColor: Colors.black12,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF800000).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    review.courseId,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF800000),
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Icon(Icons.star_rounded, size: 18, color: Colors.amber),
+                    SizedBox(width: 4),
                     Text(
-                      "Start rating courses to see them here",
+                      review.rating.toStringAsFixed(1),
                       style: TextStyle(
+                        fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: Colors.grey[500],
                       ),
                     ),
                   ],
                 ),
-              ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: viewModel.myReviews.length,
-              separatorBuilder: (context, index) => Divider(height: 1),
-              itemBuilder: (context, index) {
-                final review = viewModel.myReviews[index];
-                return ListTile(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  title: Text(
-                    review.courseId,
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 5),
-                      Row(
-                        children: [
-                          Icon(Icons.star, size: 16, color: Colors.amber),
-                          SizedBox(width: 5),
-                          Text("${review.rating.toStringAsFixed(1)}"),
-                        ],
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        review.comment,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                );
-              },
+              ],
             ),
-        ],
+            SizedBox(height: 12),
+            Text(
+              review.comment,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

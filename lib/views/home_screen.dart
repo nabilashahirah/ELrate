@@ -12,8 +12,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String _selectedFaculty = 'All';
-  final List<String> _faculties = ['All', 'FSKTM', 'FEP', 'FPP', 'FBMK', 'Gen'];
 
   @override
   void initState() {
@@ -24,35 +22,29 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  List<Course> _filterCourses(List<Course> courses) {
-    if (_selectedFaculty == 'All') {
-      return courses;
-    }
-    return courses.where((course) => course.facultyShort == _selectedFaculty).toList();
+  List<Course> _getTopRated(List<Course> courses) {
+    final sorted = List<Course>.from(courses);
+    sorted.sort((a, b) => b.averageRating.compareTo(a.averageRating));
+    return sorted.take(5).toList();
+  }
+
+  List<Course> _getMostReviewed(List<Course> courses) {
+    final sortedList = List<Course>.from(courses);
+    sortedList.sort((a, b) => b.totalReviews.compareTo(a.totalReviews));
+    return sortedList.take(5).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Discover Courses"),
+        title: Text("Campus Hub"),
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          // Faculty Filter Tabs
-          _buildFacultyFilter(),
-
-          // Course List
-          Expanded(
-            child: Consumer<CourseListViewModel>(
+      body: Consumer<CourseListViewModel>(
               builder: (context, viewModel, child) {
                 if (viewModel.isLoading && viewModel.courses.isEmpty) {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF800000),
-                    ),
-                  );
+                  return Center(child: CircularProgressIndicator(color: Color(0xFF800000)));
                 }
 
                 if (viewModel.errorMessage != null && viewModel.courses.isEmpty) {
@@ -89,35 +81,100 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
-                final filteredCourses = _filterCourses(viewModel.courses);
+                final topRated = _getTopRated(viewModel.courses);
+                final mostReviewed = _getMostReviewed(viewModel.courses);
+                final allCourses = viewModel.courses;
 
-                if (filteredCourses.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.inbox_outlined, size: 60, color: Colors.grey),
-                        SizedBox(height: 16),
-                        Text(
-                          "No courses found",
-                          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                  );
-                }
 
                 return RefreshIndicator(
                   onRefresh: () => viewModel.refreshCourses(),
-                  child: ListView.builder(
-                    padding: EdgeInsets.all(15),
-                    itemCount: filteredCourses.length,
-                    itemBuilder: (context, index) {
-                      return _buildCourseCard(context, filteredCourses[index]);
-                    },
+                  child: CustomScrollView(
+                    slivers: [
+                      // Top Rated Section
+                      SliverToBoxAdapter(
+                        child: _buildSectionHeader("Top Rated", Icons.star_rounded),
+                      ),
+                      SliverToBoxAdapter(
+                        child: Container(
+                          height: 180,
+                          child: ListView.separated(
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            scrollDirection: Axis.horizontal,
+                            itemCount: topRated.length,
+                            separatorBuilder: (context, index) => SizedBox(width: 16),
+                            itemBuilder: (context, index) {
+                              return _buildFeaturedCourseCard(context, topRated[index]);
+                            },
+                          ),
+                        ),
+                      ),
+
+                      // Most Reviewed Section
+                      SliverToBoxAdapter(
+                        child: _buildSectionHeader("Most Reviewed", Icons.rate_review_rounded),
+                      ),
+                      SliverToBoxAdapter(
+                        child: Container(
+                          height: 180,
+                          child: ListView.separated(
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            scrollDirection: Axis.horizontal,
+                            itemCount: mostReviewed.length,
+                            separatorBuilder: (context, index) => SizedBox(width: 16),
+                            itemBuilder: (context, index) {
+                              return _buildFeaturedCourseCard(context, mostReviewed[index]);
+                            },
+                          ),
+                        ),
+                      ),
+
+                      // All Courses Section
+                      SliverToBoxAdapter(
+                        child: _buildSectionHeader("All Courses", Icons.library_books_rounded),
+                      ),
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 16),
+                                child: _buildCourseCard(context, allCourses[index]),
+                              );
+                            },
+                            childCount: allCourses.length,
+                          ),
+                        ),
+                      ),
+                      SliverToBoxAdapter(child: SizedBox(height: 20)),
+                    ],
                   ),
                 );
               },
+            ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Color(0xFF800000).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: Color(0xFF800000), size: 20),
+          ),
+          SizedBox(width: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
           ),
         ],
@@ -125,38 +182,112 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFacultyFilter() {
+  Widget _buildFeaturedCourseCard(BuildContext context, Course course) {
     return Container(
-      height: 50,
-      color: Colors.grey[100],
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        itemCount: _faculties.length,
-        itemBuilder: (context, index) {
-          final faculty = _faculties[index];
-          final isSelected = _selectedFaculty == faculty;
-
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 5),
-            child: ChoiceChip(
-              label: Text(faculty),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  _selectedFaculty = faculty;
-                });
-              },
-              selectedColor: Color(0xFF800000),
-              backgroundColor: Colors.white,
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey[700],
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              elevation: isSelected ? 2 : 0,
+      width: 160,
+      child: Card(
+        elevation: 2,
+        shadowColor: Colors.black12,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF800000),
+                Color(0xFFA00000),
+              ],
             ),
-          );
-        },
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CourseDetailScreen(course: course),
+                  ),
+                );
+                if (context.mounted) {
+                  context.read<CourseListViewModel>().refreshCourses();
+                }
+              },
+              child: Padding(
+                padding: EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            course.facultyShort,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Icon(Icons.star_rounded, size: 16, color: Colors.amber),
+                            SizedBox(width: 4),
+                            Text(
+                              course.averageRating.toStringAsFixed(1),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Spacer(),
+                    Text(
+                      course.id,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      course.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 12,
+                        height: 1.2,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      "${course.totalReviews} Reviews",
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -164,52 +295,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCourseCard(BuildContext context, Course course) {
     return Card(
       elevation: 2,
-      margin: EdgeInsets.only(bottom: 15),
-      child: ListTile(
-        contentPadding: EdgeInsets.all(15),
-        leading: CircleAvatar(
-          backgroundColor: Color(0xFF800000).withValues(alpha: 0.1),
-          child: Text(
-            course.id.substring(0, 3),
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF800000),
-              fontSize: 12,
-            ),
-          ),
-        ),
-        title: Text(
-          course.id,
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(course.name),
-            SizedBox(height: 5),
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    course.facultyShort,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Spacer(),
-                Icon(Icons.star, size: 14, color: Colors.amber),
-                Text(" ${course.averageRating.toStringAsFixed(1)} (${course.totalReviews})"),
-              ],
-            ),
-          ],
-        ),
+      shadowColor: Colors.black12,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: () async {
           // Navigate to course detail and refresh when coming back
           await Navigator.push(
@@ -222,7 +310,98 @@ class _HomeScreenState extends State<HomeScreen> {
             context.read<CourseListViewModel>().refreshCourses();
           }
         },
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Color(0xFF800000).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  course.id.substring(0, min(3, course.id.length)),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF800000),
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      course.id,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF800000),
+                        fontSize: 12,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      course.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            course.facultyShort,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+                        Icon(Icons.star_rounded, size: 16, color: Colors.amber),
+                        SizedBox(width: 4),
+                        Text(
+                          course.averageRating.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          " (${course.totalReviews})",
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
+
+  int min(int a, int b) => a < b ? a : b;
 }

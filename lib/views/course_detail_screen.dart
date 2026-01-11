@@ -27,6 +27,104 @@ class _CourseDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(course.id)),
+      body: Consumer<CourseDetailViewModel>(
+        builder: (context, viewModel, child) {
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  course.name,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF800000),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  course.faculty,
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontSize: 16,
+                  ),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  "Description",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  course.description,
+                  style: TextStyle(height: 1.5, fontSize: 15),
+                ),
+                SizedBox(height: 20),
+                Divider(),
+                Text(
+                  "Student Reviews",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                SizedBox(height: 10),
+                if (viewModel.isLoading)
+                  Center(child: CircularProgressIndicator())
+                else if (viewModel.reviews.isEmpty)
+                  Text("No reviews yet.")
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: viewModel.reviews.length,
+                    itemBuilder: (context, index) {
+                      final review = viewModel.reviews[index];
+                      return Card(
+                        margin: EdgeInsets.only(bottom: 10),
+                        child: Padding(
+                          padding: EdgeInsets.all(15),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 12,
+                                    backgroundColor: Colors.grey[300],
+                                    child: Icon(
+                                      Icons.person,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    review.studentName,
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  Spacer(),
+                                  Icon(Icons.star, size: 16, color: Colors.amber),
+                                  Text(" ${review.rating.toStringAsFixed(1)}"),
+                                ],
+                              ),
+                              SizedBox(height: 8),
+                              Text(review.comment),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: Color(0xFF800000),
         icon: Icon(Icons.edit, color: Colors.white),
@@ -43,126 +141,6 @@ class _CourseDetailView extends StatelessWidget {
             context.read<CourseDetailViewModel>().refreshReviews();
           }
         },
-      ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    course.name,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF800000),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    course.faculty,
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                      fontSize: 16,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    "Description",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    course.description,
-                    style: TextStyle(height: 1.5, fontSize: 15),
-                  ),
-                  SizedBox(height: 20),
-                  Divider(),
-                  Text(
-                    "Student Reviews",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Consumer<CourseDetailViewModel>(
-            builder: (context, viewModel, child) {
-              if (viewModel.isLoading) {
-                return SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-                );
-              }
-
-              if (viewModel.reviews.isEmpty) {
-                return SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Text("No reviews yet."),
-                    ),
-                  ),
-                );
-              }
-
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final review = viewModel.reviews[index];
-                    return Card(
-                      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                      child: Padding(
-                        padding: EdgeInsets.all(15),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 12,
-                                  backgroundColor: Colors.grey[300],
-                                  child: Icon(
-                                    Icons.person,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  review.studentName,
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Spacer(),
-                                Icon(Icons.star, size: 16, color: Colors.amber),
-                                Text(" ${review.rating.toStringAsFixed(1)}"),
-                              ],
-                            ),
-                            SizedBox(height: 8),
-                            Text(review.comment),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                  childCount: viewModel.reviews.length,
-                ),
-              );
-            },
-          ),
-        ],
       ),
     );
   }
