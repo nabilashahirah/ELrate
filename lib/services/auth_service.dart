@@ -12,6 +12,7 @@ class AuthService {
   static const String _signupUrl = "https://signup-1089993125152.asia-southeast2.run.app";
   static const String _updateProfileUrl = "https://updateprofile-1089993125152.asia-southeast2.run.app";
   static const String _getUserReviewsUrl = "https://getuserreviews-1089993125152.asia-southeast2.run.app";
+  static const String _forgotPasswordUrl = "https://forgotpassword-1089993125152.asia-southeast2.run.app";
 
   // SharedPreferences keys
   static const String _tokenKey = 'auth_token';
@@ -237,6 +238,42 @@ class AuthService {
     } catch (e) {
       print('❌ getUserReviews error: $e');
       throw Exception('Error fetching reviews: $e');
+    }
+  }
+
+  /// Forgot password - Send reset email
+  Future<void> forgotPassword(String email) async {
+    try {
+      print('🔐 Sending forgot password request for: $email');
+      print('🌐 URL: $_forgotPasswordUrl');
+
+      final response = await http.post(
+        Uri.parse(_forgotPasswordUrl),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({'email': email}),
+      );
+
+      print('📡 Response status: ${response.statusCode}');
+      print('📦 Response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ Password reset email sent successfully');
+        // Success - password reset email sent
+        return;
+      } else {
+        // Try to parse error message from response
+        try {
+          final error = json.decode(response.body);
+          throw Exception(error['message'] ?? 'Failed to send reset email (${response.statusCode})');
+        } catch (_) {
+          throw Exception('Failed to send reset email with status code: ${response.statusCode}');
+        }
+      }
+    } catch (e) {
+      print('❌ Forgot password error: $e');
+      // If it's already an Exception, rethrow it
+      if (e is Exception) rethrow;
+      throw Exception('Error sending reset email: $e');
     }
   }
 

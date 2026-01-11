@@ -98,6 +98,26 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  /// Forgot password
+  Future<bool> forgotPassword(String email) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authService.forgotPassword(email);
+      _errorMessage = null;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Logout user
   Future<void> logout() async {
     await _authService.logout();

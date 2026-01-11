@@ -90,6 +90,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Color(0xFF800000),
       body: Stack(
         children: [
@@ -157,7 +158,8 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                       ),
                     ),
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.all(30),
+                      physics: BouncingScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(30, 30, 30, 30),
                       child: Form(
                         key: _formKey,
                         child: Column(
