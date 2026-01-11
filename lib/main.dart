@@ -6,6 +6,7 @@ import 'viewmodels/profile_viewmodel.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'views/main_navigation.dart';
 import 'views/auth/login_screen.dart';
+import 'views/splash_intro_screen.dart';
 
 void main() {
   runApp(ELRateApp());
@@ -94,9 +95,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
                       color: Color(0xFF800000).withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.school,
-                      size: 64,
+                    child: Image.asset(
+                      'assets/logo.png',
+                      width: 64,
+                      height: 64,
                       color: Color(0xFF800000),
                     ),
                   ),
@@ -111,7 +113,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
 
         // Show main app if authenticated, login screen otherwise
-        return authViewModel.isAuthenticated ? MainNavigation() : LoginScreen();
+        return authViewModel.isAuthenticated ? MainNavigation() : SplashIntroScreen();
       },
     );
   }

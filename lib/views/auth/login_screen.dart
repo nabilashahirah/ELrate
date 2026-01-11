@@ -68,10 +68,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo/Icon
-                  Icon(
-                    Icons.school,
-                    size: 80,
-                    color: Color(0xFF800000),
+                  Center(
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF800000).withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        color: Color(0xFF800000),
+                      ),
+                    ),
                   ),
                   SizedBox(height: 20),
 
@@ -99,14 +109,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Login Title
                   Text(
                     "Welcome Back",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
+                      color: Color(0xFF800000),
                     ),
                   ),
                   SizedBox(height: 8),
                   Text(
                     "Sign in to continue",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.grey[600],
                     ),
