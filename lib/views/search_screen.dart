@@ -13,7 +13,6 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _faculties = ['All', 'FSKTM', 'FEP', 'FPP', 'FBMK', 'Gen'];
 
   @override
   void initState() {
@@ -214,7 +213,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
-                        children: _faculties.map((faculty) {
+                        children: viewModel.availableFaculties.map((faculty) {
                           final isSelected = viewModel.selectedFaculty == faculty;
                           return Padding(
                             padding: EdgeInsets.only(right: 8),

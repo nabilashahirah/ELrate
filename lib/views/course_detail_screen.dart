@@ -112,6 +112,39 @@ class _CourseDetailView extends StatelessWidget {
                                   Text(" ${review.rating.toStringAsFixed(1)}"),
                                 ],
                               ),
+                              if (review.isRecommended) ...[
+                                SizedBox(height: 8),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF800000).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Color(0xFF800000),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.thumb_up,
+                                        size: 14,
+                                        color: Color(0xFF800000),
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        "Recommends this course",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF800000),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                               SizedBox(height: 8),
                               Text(review.comment),
                             ],

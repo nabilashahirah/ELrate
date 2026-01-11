@@ -323,6 +323,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
+                if (review.timestamp != null)
+                  Text(
+                    "${review.timestamp!.day}/${review.timestamp!.month}/${review.timestamp!.year}",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+              ],
+            ),
+            SizedBox(height: 8),
+            Row(
+              children: [
                 Row(
                   children: [
                     Icon(Icons.star_rounded, size: 18, color: Colors.amber),
@@ -347,6 +360,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 height: 1.4,
               ),
             ),
+            // Badges for anonymous and recommended
+            if (review.isAnonymous || review.isRecommended) ...[
+              SizedBox(height: 12),
+              Row(
+                children: [
+                  if (review.isAnonymous)
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.visibility_off, size: 12, color: Colors.grey[700]),
+                          SizedBox(width: 4),
+                          Text(
+                            'Anonymous',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (review.isAnonymous && review.isRecommended)
+                    SizedBox(width: 8),
+                  if (review.isRecommended)
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green[50],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.thumb_up, size: 12, color: Colors.green[700]),
+                          SizedBox(width: 4),
+                          Text(
+                            'Recommended',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.green[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

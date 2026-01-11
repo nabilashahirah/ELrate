@@ -63,9 +63,16 @@ class ProfileViewModel extends ChangeNotifier {
       // Fetch reviews from API
       _myReviews = await _authService.getUserReviews();
       _errorMessage = null;
+      print('✅ Fetched ${_myReviews.length} reviews'); // Debug log
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      String msg = e.toString().replaceAll('Exception: ', '');
+      // Detect Firestore missing index error
+      if (msg.contains('FAILED_PRECONDITION')) {
+        msg = 'Backend Error: Missing Database Index. Check Cloud Console logs.';
+      }
+      _errorMessage = msg;
       _myReviews = [];
+      print('❌ Error fetching reviews: $_errorMessage'); // Debug log
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -12,6 +12,7 @@ class SearchViewModel extends ChangeNotifier {
   String _searchQuery = '';
   String _selectedFaculty = 'All';
   double _minRating = 0.0;
+  final List<String> _availableFaculties = ['All'];
 
   // Getters
   List<Course> get searchResults => _searchResults;
@@ -20,6 +21,7 @@ class SearchViewModel extends ChangeNotifier {
   String get searchQuery => _searchQuery;
   String get selectedFaculty => _selectedFaculty;
   double get minRating => _minRating;
+  List<String> get availableFaculties => _availableFaculties;
 
   /// Initialize by fetching all courses
   Future<void> initialize() async {
@@ -31,6 +33,9 @@ class SearchViewModel extends ChangeNotifier {
       _allCourses = await _apiService.getCourses();
       _searchResults = _allCourses;
       _errorMessage = null;
+
+      // Extract unique faculties from courses
+      _extractUniqueFaculties();
     } catch (e) {
       _errorMessage = e.toString();
       _allCourses = [];
@@ -39,6 +44,22 @@ class SearchViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Extract unique faculties from all courses
+  void _extractUniqueFaculties() {
+    final faculties = <String>{'All'};
+    for (var course in _allCourses) {
+      if (course.facultyShort.isNotEmpty) {
+        faculties.add(course.facultyShort);
+      }
+    }
+    _availableFaculties.clear();
+    _availableFaculties.addAll(faculties.toList()..sort((a, b) {
+      if (a == 'All') return -1;
+      if (b == 'All') return 1;
+      return a.compareTo(b);
+    }));
   }
 
   /// Update search query

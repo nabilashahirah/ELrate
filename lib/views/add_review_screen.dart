@@ -63,8 +63,9 @@ class _AddReviewViewState extends State<_AddReviewView> {
         padding: EdgeInsets.all(20),
         child: Consumer<AddReviewViewModel>(
           builder: (context, viewModel, child) {
-            return Column(
-              children: [
+            return SingleChildScrollView(
+              child: Column(
+                children: [
                 Text(
                   "Rate this course",
                   style: TextStyle(
@@ -98,6 +99,41 @@ class _AddReviewViewState extends State<_AddReviewView> {
                   maxLines: 4,
                 ),
                 SizedBox(height: 20),
+
+                // Anonymous Toggle
+                SwitchListTile(
+                  title: Text(
+                    "Post as Anonymous",
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: Text(
+                    "Your name will be hidden from other users",
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                  value: viewModel.isAnonymous,
+                  activeTrackColor: Color(0xFF800000),
+                  onChanged: (value) => viewModel.toggleAnonymous(value),
+                  contentPadding: EdgeInsets.zero,
+                ),
+
+                // Recommended Toggle
+                CheckboxListTile(
+                  title: Text(
+                    "I recommend this course",
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: Text(
+                    "Show a recommendation badge on your review",
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                  value: viewModel.isRecommended,
+                  activeColor: Color(0xFF800000),
+                  onChanged: (value) => viewModel.toggleRecommended(value ?? false),
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
+
+                SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -115,6 +151,7 @@ class _AddReviewViewState extends State<_AddReviewView> {
                   ),
                 ),
               ],
+            ),
             );
           },
         ),

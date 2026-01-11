@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/course.dart';
 import '../models/review.dart';
 import '../utils/constants.dart';
+import 'auth_service.dart';
 
 class ApiService {
   // API Endpoints from constants
@@ -14,6 +15,8 @@ class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
   ApiService._internal();
+
+  final AuthService _authService = AuthService();
 
   /// Fetch all courses from the API
   Future<List<Course>> getCourses() async {
@@ -51,13 +54,21 @@ class ApiService {
   /// Submit a new review
   Future<void> submitReview(Review review) async {
     try {
+      // Get authentication token
+      final token = await _authService.getToken();
+
+      final headers = {
+        "Content-Type": "application/json",
+        if (token != null) "Authorization": "Bearer $token",
+      };
+
       final response = await http.post(
         Uri.parse(_submitReviewUrl),
-        headers: {"Content-Type": "application/json"},
+        headers: headers,
         body: json.encode(review.toJson()),
       );
 
-      if (response.statusCode != 200) {
+      if (response.statusCode != 200 && response.statusCode != 201) {
         throw Exception('Failed to submit review: ${response.statusCode}');
       }
     } catch (e) {

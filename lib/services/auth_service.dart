@@ -11,7 +11,7 @@ class AuthService {
   static const String _loginUrl = "https://login-1089993125152.asia-southeast2.run.app";
   static const String _signupUrl = "https://signup-1089993125152.asia-southeast2.run.app";
   static const String _updateProfileUrl = "https://updateprofile-1089993125152.asia-southeast2.run.app";
-  static const String _getUserReviewsUrl = "https://getuserreviews-1089993125152.europe-west1.run.app";
+  static const String _getUserReviewsUrl = "https://getuserreviews-1089993125152.asia-southeast2.run.app";
 
   // SharedPreferences keys
   static const String _tokenKey = 'auth_token';
@@ -185,26 +185,59 @@ class AuthService {
         throw Exception('User not authenticated');
       }
 
+      // Get current user to pass userId
+      final currentUser = await getCurrentUser();
+      if (currentUser == null) {
+        throw Exception('User not found');
+      }
+
+      // Add userId as query parameter
+      final uri = Uri.parse("$_getUserReviewsUrl?userId=${Uri.encodeComponent(currentUser.id)}");
+
+      print('🔍 Fetching reviews for userId: ${currentUser.id}');
+      print('🌐 URL: $uri');
+
       final response = await http.get(
-        Uri.parse(_getUserReviewsUrl),
+        uri,
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
       );
 
+      print('📡 Response status: ${response.statusCode}');
+      print('📦 Response body: ${response.body}');
+
       if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
+        final dynamic jsonData = json.decode(response.body);
 
-        // Assuming the API returns an array of reviews
-        final List<dynamic> reviewsJson = jsonData['reviews'] ?? jsonData;
+        // Handle both array and object responses
+        List<dynamic> reviewsJson;
+        if (jsonData is List) {
+          // Direct array response
+          reviewsJson = jsonData;
+        } else if (jsonData is Map && jsonData.containsKey('reviews')) {
+          // Object with 'reviews' key
+          reviewsJson = jsonData['reviews'] as List<dynamic>;
+        } else {
+          // Empty or unexpected format
+          reviewsJson = [];
+        }
 
-        return reviewsJson.map((json) => Review.fromJson(json)).toList();
+        print('✅ Parsed ${reviewsJson.length} reviews');
+        return reviewsJson.map((json) => Review.fromJson(json as Map<String, dynamic>)).toList();
       } else {
-        final error = json.decode(response.body);
-        throw Exception(error['message'] ?? 'Failed to fetch reviews');
+        String errorMessage;
+        try {
+          final error = json.decode(response.body);
+          errorMessage = error['message'] ?? error['error'] ?? 'Failed to fetch reviews';
+        } catch (_) {
+          errorMessage = 'Failed to fetch reviews (${response.statusCode})';
+        }
+        throw Exception(errorMessage);
       }
     } catch (e) {
+      print('❌ getUserReviews error: $e');
       throw Exception('Error fetching reviews: $e');
     }
   }
