@@ -154,8 +154,6 @@ class AuthService {
       );
 
       if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-
         // Update local storage with new data
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_userNameKey, name);

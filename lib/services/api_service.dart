@@ -35,9 +35,13 @@ class ApiService {
   }
 
   /// Fetch reviews for a specific course
-  Future<List<Review>> getReviews(String courseId) async {
+  Future<List<Review>> getReviews(String courseId, {int? limit, int? offset}) async {
     try {
-      final uri = Uri.parse("$_getReviewsUrl?courseId=$courseId");
+      var url = "$_getReviewsUrl?courseId=$courseId";
+      if (limit != null) url += "&limit=$limit";
+      if (offset != null) url += "&offset=$offset";
+
+      final uri = Uri.parse(url);
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
