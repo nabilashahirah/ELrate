@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/auth_request.dart';
 import '../models/user.dart';
 import '../models/review.dart';
@@ -22,6 +23,9 @@ class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
+
+  // Secure storage for sensitive data (Token)
+  final _secureStorage = const FlutterSecureStorage();
 
   /// Login user
   Future<AuthResponse> login(LoginRequest request) async {
@@ -92,7 +96,9 @@ class AuthService {
   /// Save authentication data locally
   Future<void> _saveAuthData(AuthResponse authResponse) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, authResponse.token);
+    // Save Token to Secure Storage
+    await _secureStorage.write(key: _tokenKey, value: authResponse.token);
+    // Save User Info to Shared Preferences (Non-sensitive)
     await prefs.setString(_userIdKey, authResponse.userId);
     await prefs.setString(_userNameKey, authResponse.name);
     await prefs.setString(_userEmailKey, authResponse.email);
@@ -100,8 +106,7 @@ class AuthService {
 
   /// Get stored token
   Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
+    return await _secureStorage.read(key: _tokenKey);
   }
 
   /// Get stored user data
@@ -207,7 +212,7 @@ class AuthService {
   /// Logout user
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
+    await _secureStorage.delete(key: _tokenKey);
     await prefs.remove(_userIdKey);
     await prefs.remove(_userNameKey);
     await prefs.remove(_userEmailKey);
