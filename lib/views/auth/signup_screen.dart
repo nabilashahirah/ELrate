@@ -10,7 +10,7 @@ class SignupScreen extends StatefulWidget {
   State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -18,6 +18,27 @@ class _SignupScreenState extends State<SignupScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _agreedToTerms = false;
+  
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 1200),
+    );
+
+    _fadeAnimation = CurvedAnimation(parent: _animationController, curve: Interval(0.0, 0.6, curve: Curves.easeIn));
+    _slideAnimation = Tween<Offset>(begin: Offset(0, 0.3), end: Offset.zero).animate(
+      CurvedAnimation(parent: _animationController, curve: Interval(0.2, 1.0, curve: Curves.easeOutCubic)),
+    );
+
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
@@ -25,11 +46,19 @@ class _SignupScreenState extends State<SignupScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (!_agreedToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please agree to the Terms and Conditions')),
+      );
       return;
     }
 
@@ -61,75 +90,101 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFF800000)),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Logo/Icon
-                  Center(
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Color(0xFF800000).withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Image.asset(
-                        'assets/logo.png',
-                        color: Color(0xFF800000),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20),
+      backgroundColor: Color(0xFF800000),
+      body: Stack(
+        children: [
+          // Background Gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF800000), Color(0xFF500000)],
+              ),
+            ),
+          ),
 
-                  // Signup Title
-                  Text(
-                    "Create Account",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF800000),
-                    ),
+          Column(
+            children: [
+              // Header Section
+              Expanded(
+                flex: 1,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(height: 20),
+                      Container(
+                        width: 80,
+                        height: 80,
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        "Create Account",
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    "Sign up to get started",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  SizedBox(height: 32),
+                ),
+              ),
 
-                  // Name Field
+              // Form Section
+              Expanded(
+                flex: 3,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.all(30),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(height: 20),
+                            // Name Field
                   TextFormField(
                     controller: _nameController,
                     textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(
                       labelText: "Full Name",
-                      prefixIcon: Icon(Icons.person_outlined),
+                      prefixIcon: Icon(Icons.person_outlined, color: Color(0xFF800000)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                       filled: true,
                       fillColor: Colors.grey[50],
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF800000)),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -149,12 +204,21 @@ class _SignupScreenState extends State<SignupScreen> {
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       labelText: "Email",
-                      prefixIcon: Icon(Icons.email_outlined),
+                      prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF800000)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                       filled: true,
                       fillColor: Colors.grey[50],
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF800000)),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -178,10 +242,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: "Password",
-                      prefixIcon: Icon(Icons.lock_outlined),
+                      prefixIcon: Icon(Icons.lock_outlined, color: Color(0xFF800000)),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                          color: Colors.grey,
                         ),
                         onPressed: () {
                           setState(() {
@@ -191,9 +256,18 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                       filled: true,
                       fillColor: Colors.grey[50],
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF800000)),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -213,10 +287,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     obscureText: _obscureConfirmPassword,
                     decoration: InputDecoration(
                       labelText: "Confirm Password",
-                      prefixIcon: Icon(Icons.lock_outlined),
+                      prefixIcon: Icon(Icons.lock_outlined, color: Color(0xFF800000)),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                          color: Colors.grey,
                         ),
                         onPressed: () {
                           setState(() {
@@ -226,9 +301,18 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                       filled: true,
                       fillColor: Colors.grey[50],
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF800000)),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -240,7 +324,24 @@ class _SignupScreenState extends State<SignupScreen> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 32),
+                  SizedBox(height: 10),
+
+                  // Terms and Conditions Checkbox
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _agreedToTerms,
+                        activeColor: Color(0xFF800000),
+                        onChanged: (value) {
+                          setState(() {
+                            _agreedToTerms = value ?? false;
+                          });
+                        },
+                      ),
+                      Text("I agree to the Terms and Conditions"),
+                    ],
+                  ),
+                  SizedBox(height: 20),
 
                   // Signup Button
                   Consumer<AuthViewModel>(
@@ -255,6 +356,8 @@ class _SignupScreenState extends State<SignupScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            elevation: 5,
+                            shadowColor: Color(0xFF800000).withOpacity(0.4),
                           ),
                           child: authViewModel.isLoading
                               ? SizedBox(
@@ -276,7 +379,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       );
                     },
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: 20),
 
                   // Login Link
                   Row(
@@ -305,6 +408,23 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
           ),
         ),
+      ),
+              ),
+            ],
+          ),
+
+          // Back Button
+          Positioned(
+            top: 0,
+            left: 0,
+            child: SafeArea(
+              child: IconButton(
+                icon: Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

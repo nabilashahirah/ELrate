@@ -11,16 +11,37 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 1200),
+    );
+
+    _fadeAnimation = CurvedAnimation(parent: _animationController, curve: Interval(0.0, 0.6, curve: Curves.easeIn));
+    _slideAnimation = Tween<Offset>(begin: Offset(0, 0.3), end: Offset.zero).animate(
+      CurvedAnimation(parent: _animationController, curve: Interval(0.2, 1.0, curve: Curves.easeOutCubic)),
+    );
+
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -56,88 +77,115 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Logo/Icon
-                  Center(
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Color(0xFF800000).withOpacity(0.1),
-                        shape: BoxShape.circle,
+      backgroundColor: Color(0xFF800000),
+      body: Stack(
+        children: [
+          // Background Gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF800000), Color(0xFF500000)],
+              ),
+            ),
+          ),
+          
+          Column(
+            children: [
+              // Header Section
+              Expanded(
+                flex: 2,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        padding: EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 20,
+                              offset: Offset(0, 10),
+                            )
+                          ],
+                        ),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          color: Colors.white,
+                        ),
                       ),
-                      child: Image.asset(
-                        'assets/logo.png',
-                        color: Color(0xFF800000),
+                      SizedBox(height: 20),
+                      Text(
+                        "Welcome Back",
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        "Sign in to continue",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Form Section
+              Expanded(
+                flex: 3,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 20),
-
-                  // App Title
-                  Text(
-                    "ELRate",
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF800000),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    "UPM Course Rating System",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 48),
-
-                  // Login Title
-                  Text(
-                    "Welcome Back",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF800000),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    "Sign in to continue",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  SizedBox(height: 32),
-
-                  // Email Field
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.all(30),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(height: 20),
+                            // Email Field
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       labelText: "Email",
-                      prefixIcon: Icon(Icons.email_outlined),
+                      prefixIcon: Icon(Icons.email_outlined, color: Color(0xFF800000)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                       filled: true,
                       fillColor: Colors.grey[50],
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF800000)),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -149,7 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: 20),
 
                   // Password Field
                   TextFormField(
@@ -157,10 +205,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: "Password",
-                      prefixIcon: Icon(Icons.lock_outlined),
+                      prefixIcon: Icon(Icons.lock_outlined, color: Color(0xFF800000)),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                          color: Colors.grey,
                         ),
                         onPressed: () {
                           setState(() {
@@ -170,9 +219,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                       filled: true,
                       fillColor: Colors.grey[50],
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF800000)),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -184,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 12),
+                  SizedBox(height: 10),
 
                   // Forgot Password
                   Align(
@@ -197,11 +255,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: Text(
                         "Forgot Password?",
-                        style: TextStyle(color: Color(0xFF800000)),
+                        style: TextStyle(color: Color(0xFF800000), fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: 30),
 
                   // Login Button
                   Consumer<AuthViewModel>(
@@ -216,6 +274,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            elevation: 5,
+                            shadowColor: Color(0xFF800000).withOpacity(0.4),
                           ),
                           child: authViewModel.isLoading
                               ? SizedBox(
@@ -237,7 +297,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     },
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: 20),
 
                   // Sign Up Link
                   Row(
@@ -269,6 +329,11 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
