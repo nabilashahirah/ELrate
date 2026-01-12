@@ -152,32 +152,27 @@ class _HomeScreenState extends State<HomeScreen> {
                       SliverToBoxAdapter(
                         child: _buildSectionHeader(context, "What People Say", Icons.forum_rounded),
                       ),
-                      SliverPadding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: responsive.spacing(20),
-                          vertical: responsive.spacing(10),
-                        ),
-                        sliver: latestReviews.isEmpty
-                            ? SliverToBoxAdapter(
+                      SliverToBoxAdapter(
+                        child: latestReviews.isEmpty
+                            ? Padding(
+                                padding: EdgeInsets.all(responsive.spacing(32)),
                                 child: Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(responsive.spacing(32)),
-                                    child: Text(
-                                      "No reviews yet",
-                                      style: TextStyle(color: Colors.grey[600], fontSize: responsive.sp(14)),
-                                    ),
+                                  child: Text(
+                                    "No reviews yet",
+                                    style: TextStyle(color: Colors.grey[600], fontSize: responsive.sp(14)),
                                   ),
                                 ),
                               )
-                            : SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    return Padding(
-                                      padding: EdgeInsets.only(bottom: responsive.spacing(16)),
-                                      child: _buildReviewCard(context, latestReviews[index], viewModel.courses),
-                                    );
+                            : SizedBox(
+                                height: responsive.isMobile ? 200 : 220,
+                                child: ListView.separated(
+                                  padding: EdgeInsets.symmetric(horizontal: responsive.spacing(20)),
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: latestReviews.length,
+                                  separatorBuilder: (context, index) => SizedBox(width: responsive.spacing(12)),
+                                  itemBuilder: (context, index) {
+                                    return _buildReviewCard(context, latestReviews[index], viewModel.courses, responsive);
                                   },
-                                  childCount: latestReviews.length,
                                 ),
                               ),
                       ),
@@ -345,8 +340,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildReviewCard(BuildContext context, Review review, List<Course> courses) {
-    final responsive = context.responsive;
+  Widget _buildReviewCard(BuildContext context, Review review, List<Course> courses, Responsive responsive) {
 
     // Find the course for this review
     final course = courses.firstWhere(
@@ -362,11 +356,49 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
 
-    return Card(
-      elevation: 2,
-      shadowColor: Colors.black12,
+    return _ReviewCardExpanding(
+      review: review,
+      course: course,
+      responsive: responsive,
+    );
+  }
+}
+
+class _ReviewCardExpanding extends StatefulWidget {
+  final Review review;
+  final Course course;
+  final Responsive responsive;
+
+  const _ReviewCardExpanding({
+    required this.review,
+    required this.course,
+    required this.responsive,
+  });
+
+  @override
+  State<_ReviewCardExpanding> createState() => _ReviewCardExpandingState();
+}
+
+class _ReviewCardExpandingState extends State<_ReviewCardExpanding> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final responsive = widget.responsive;
+    final course = widget.course;
+    final review = widget.review;
+
+    return SizedBox(
+      width: responsive.isMobile ? 280 : 320,
+      child: Card(
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade200, width: 1),
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         onTap: () async {
           // Navigate to course detail
           await Navigator.push(
@@ -379,99 +411,266 @@ class _HomeScreenState extends State<HomeScreen> {
             context.read<CourseListViewModel>().refreshCourses();
           }
         },
-        child: Padding(
-          padding: EdgeInsets.all(responsive.spacing(16)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with course info and rating
-              Row(
-                children: [
-                  Expanded(
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(responsive.spacing(10)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with course info and faculty tag
+                Row(
+                  children: [
+                    // Course icon/avatar
+                    Container(
+                      width: responsive.isMobile ? 32 : 36,
+                      height: responsive.isMobile ? 32 : 36,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF800000),
+                            Color(0xFFA00000),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        course.id.substring(0, min(3, course.id.length)),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: responsive.sp(10),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: responsive.spacing(6)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  course.id,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF800000),
+                                    fontSize: responsive.sp(10),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              SizedBox(width: responsive.spacing(3)),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: responsive.spacing(3),
+                                  vertical: responsive.spacing(1),
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF800000).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                                child: Text(
+                                  course.facultyShort,
+                                  style: TextStyle(
+                                    fontSize: responsive.sp(7),
+                                    color: Color(0xFF800000),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: responsive.spacing(1)),
+                          Text(
+                            course.name,
+                            style: TextStyle(
+                              fontSize: responsive.sp(9),
+                              color: Colors.grey[700],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: responsive.spacing(6)),
+
+                // Rating stars with visual emphasis
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: responsive.spacing(5),
+                    vertical: responsive.spacing(3),
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ...List.generate(5, (index) {
+                        return Icon(
+                          index < review.rating.floor()
+                              ? Icons.star_rounded
+                              : (index < review.rating ? Icons.star_half_rounded : Icons.star_outline_rounded),
+                          size: responsive.iconSize(11),
+                          color: Colors.amber[700],
+                        );
+                      }),
+                      SizedBox(width: responsive.spacing(3)),
+                      Text(
+                        review.rating.toStringAsFixed(1),
+                        style: TextStyle(
+                          fontSize: responsive.sp(10),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amber[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: responsive.spacing(6)),
+
+                // Review comment with quote styling
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isExpanded = !_isExpanded;
+                    });
+                  },
+                  child: Container(
+                    padding: EdgeInsets.only(left: responsive.spacing(6)),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          color: Color(0xFF800000).withOpacity(0.3),
+                          width: 2,
+                        ),
+                      ),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          course.id,
+                          '"${review.comment}"',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF800000),
-                            fontSize: responsive.sp(12),
+                            fontSize: responsive.sp(11),
+                            height: 1.3,
+                            color: Colors.black87,
+                            fontStyle: FontStyle.italic,
                           ),
+                          maxLines: _isExpanded ? null : 2,
+                          overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: responsive.spacing(2)),
-                        Text(
-                          course.name,
-                          style: TextStyle(
-                            fontSize: responsive.sp(13),
-                            color: Colors.grey[700],
+                        if (review.comment.length > 100 && !_isExpanded)
+                          Padding(
+                            padding: EdgeInsets.only(top: responsive.spacing(2)),
+                            child: Text(
+                              "Tap to read more",
+                              style: TextStyle(
+                                fontSize: responsive.sp(9),
+                                color: Color(0xFF800000),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
                       ],
                     ),
                   ),
-                  SizedBox(width: responsive.spacing(8)),
-                  // Rating stars
-                  Row(
-                    children: List.generate(5, (index) {
-                      return Icon(
-                        index < review.rating.floor()
-                            ? Icons.star_rounded
-                            : (index < review.rating ? Icons.star_half_rounded : Icons.star_outline_rounded),
-                        size: responsive.iconSize(16),
-                        color: Colors.amber,
-                      );
-                    }),
-                  ),
-                ],
-              ),
-              SizedBox(height: responsive.spacing(12)),
-
-              // Review comment
-              Text(
-                review.comment,
-                style: TextStyle(
-                  fontSize: responsive.sp(14),
-                  height: 1.4,
-                  color: Colors.black87,
                 ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-              SizedBox(height: responsive.spacing(12)),
+                SizedBox(height: responsive.spacing(6)),
 
-              // Footer with student name and timestamp
-              Row(
-                children: [
-                  Icon(Icons.person_outline, size: responsive.iconSize(14), color: Colors.grey[600]),
-                  SizedBox(width: responsive.spacing(4)),
-                  Text(
-                    review.isAnonymous ? "Anonymous" : review.studentName,
-                    style: TextStyle(
-                      fontSize: responsive.sp(12),
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Spacer(),
-                  if (review.timestamp != null) ...[
-                    Icon(Icons.access_time, size: responsive.iconSize(14), color: Colors.grey[600]),
-                    SizedBox(width: responsive.spacing(4)),
-                    Text(
-                      _formatTimestamp(review.timestamp!),
-                      style: TextStyle(
-                        fontSize: responsive.sp(12),
-                        color: Colors.grey[600],
+                // Footer with student name and timestamp
+                Row(
+                  children: [
+                    // Student avatar/icon
+                    CircleAvatar(
+                      radius: responsive.isMobile ? 10 : 12,
+                      backgroundColor: Color(0xFF800000).withOpacity(0.1),
+                      child: Icon(
+                        review.isAnonymous ? Icons.person_off_outlined : Icons.person,
+                        size: responsive.iconSize(12),
+                        color: Color(0xFF800000),
                       ),
                     ),
+                    SizedBox(width: responsive.spacing(4)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            review.isAnonymous ? "Anonymous" : review.studentName,
+                            style: TextStyle(
+                              fontSize: responsive.sp(10),
+                              color: Colors.grey[800],
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (review.timestamp != null)
+                            Text(
+                              _formatTimestamp(review.timestamp!),
+                              style: TextStyle(
+                                fontSize: responsive.sp(9),
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    // Recommended badge
+                    if (review.isRecommended)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: responsive.spacing(4),
+                          vertical: responsive.spacing(2),
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green[50],
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.green[300]!, width: 1),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.thumb_up,
+                              size: responsive.iconSize(9),
+                              color: Colors.green[700],
+                            ),
+                            SizedBox(width: responsive.spacing(2)),
+                            Text(
+                              "Rec",
+                              style: TextStyle(
+                                fontSize: responsive.sp(8),
+                                color: Colors.green[700],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
+      ),
       ),
     );
   }
