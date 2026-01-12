@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/auth_request.dart';
 import '../models/user.dart';
 import '../models/review.dart';
+import '../utils/security_helper.dart';
 
 class AuthService {
   // API Endpoints - Update these with your actual backend URLs
@@ -30,6 +31,20 @@ class AuthService {
 
   /// Login user
   Future<AuthResponse> login(LoginRequest request) async {
+    // Rate limiting check
+    if (!SecurityHelper.canAttemptAction('login', cooldownSeconds: 2)) {
+      throw Exception('Too many attempts. Please wait a moment.');
+    }
+
+    // Input validation
+    if (!SecurityHelper.isValidEmail(request.email)) {
+      throw Exception('Invalid email format');
+    }
+
+    if (request.password.length < 8) {
+      throw Exception('Invalid credentials');
+    }
+
     try {
       final response = await http.post(
         Uri.parse(_loginUrl),
@@ -46,28 +61,50 @@ class AuthService {
 
         return authResponse;
       } else {
-        // Try to parse error message from response
-        try {
-          final error = json.decode(response.body);
-          throw Exception(error['message'] ?? 'Login failed (${response.statusCode})');
-        } catch (_) {
-          throw Exception('Login failed with status code: ${response.statusCode}');
-        }
+        // Generic error message - don't reveal if user exists or password is wrong
+        throw Exception('Invalid email or password');
       }
     } catch (e) {
-      // If it's already an Exception, rethrow it
       if (e is Exception) rethrow;
-      throw Exception('Error during login: $e');
+      throw Exception('Unable to sign in. Please check your connection and try again.');
     }
   }
 
   /// Sign up new user
   Future<AuthResponse> signup(SignupRequest request) async {
+    // Rate limiting check
+    if (!SecurityHelper.canAttemptAction('signup', cooldownSeconds: 5)) {
+      throw Exception('Too many attempts. Please wait a moment.');
+    }
+
+    // Input validation and sanitization
+    final sanitizedName = SecurityHelper.sanitizeInput(request.name);
+    if (sanitizedName.isEmpty || sanitizedName.length < 2) {
+      throw Exception('Name must be at least 2 characters');
+    }
+
+    if (!SecurityHelper.isValidEmail(request.email)) {
+      throw Exception('Invalid email format');
+    }
+
+    // Validate password strength
+    final passwordError = SecurityHelper.validatePassword(request.password);
+    if (passwordError != null) {
+      throw Exception(passwordError);
+    }
+
     try {
+      // Create sanitized request
+      final sanitizedRequest = SignupRequest(
+        name: sanitizedName,
+        email: request.email.trim().toLowerCase(),
+        password: request.password,
+      );
+
       final response = await http.post(
         Uri.parse(_signupUrl),
         headers: {"Content-Type": "application/json"},
-        body: json.encode(request.toJson()),
+        body: json.encode(sanitizedRequest.toJson()),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -79,18 +116,12 @@ class AuthService {
 
         return authResponse;
       } else {
-        // Try to parse error message from response
-        try {
-          final error = json.decode(response.body);
-          throw Exception(error['message'] ?? 'Signup failed (${response.statusCode})');
-        } catch (_) {
-          throw Exception('Signup failed with status code: ${response.statusCode}. Response: ${response.body}');
-        }
+        // Generic error message - don't expose backend details
+        throw Exception('Unable to create account. Please try a different email.');
       }
     } catch (e) {
-      // If it's already an Exception, rethrow it
       if (e is Exception) rethrow;
-      throw Exception('Error during signup: $e');
+      throw Exception('Unable to sign up. Please check your connection and try again.');
     }
   }
 
@@ -193,9 +224,6 @@ class AuthService {
       // Add userId as query parameter
       final uri = Uri.parse("$_getUserReviewsUrl?userId=${Uri.encodeComponent(currentUser.id)}");
 
-      print('🔍 Fetching reviews for userId: ${currentUser.id}');
-      print('🌐 URL: $uri');
-
       final response = await http.get(
         uri,
         headers: {
@@ -203,9 +231,6 @@ class AuthService {
           "Authorization": "Bearer $token",
         },
       );
-
-      print('📡 Response status: ${response.statusCode}');
-      print('📦 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final dynamic jsonData = json.decode(response.body);
@@ -223,57 +248,36 @@ class AuthService {
           reviewsJson = [];
         }
 
-        print('✅ Parsed ${reviewsJson.length} reviews');
         return reviewsJson.map((json) => Review.fromJson(json as Map<String, dynamic>)).toList();
       } else {
-        String errorMessage;
-        try {
-          final error = json.decode(response.body);
-          errorMessage = error['message'] ?? error['error'] ?? 'Failed to fetch reviews';
-        } catch (_) {
-          errorMessage = 'Failed to fetch reviews (${response.statusCode})';
-        }
-        throw Exception(errorMessage);
+        // Generic error message - don't expose internal details
+        throw Exception('Failed to fetch reviews. Please try again.');
       }
     } catch (e) {
-      print('❌ getUserReviews error: $e');
-      throw Exception('Error fetching reviews: $e');
+      if (e is Exception) rethrow;
+      throw Exception('Unable to load reviews. Please check your connection.');
     }
   }
 
   /// Forgot password - Send reset email
   Future<void> forgotPassword(String email) async {
     try {
-      print('🔐 Sending forgot password request for: $email');
-      print('🌐 URL: $_forgotPasswordUrl');
-
       final response = await http.post(
         Uri.parse(_forgotPasswordUrl),
         headers: {"Content-Type": "application/json"},
         body: json.encode({'email': email}),
       );
 
-      print('📡 Response status: ${response.statusCode}');
-      print('📦 Response body: ${response.body}');
-
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('✅ Password reset email sent successfully');
         // Success - password reset email sent
         return;
       } else {
-        // Try to parse error message from response
-        try {
-          final error = json.decode(response.body);
-          throw Exception(error['message'] ?? 'Failed to send reset email (${response.statusCode})');
-        } catch (_) {
-          throw Exception('Failed to send reset email with status code: ${response.statusCode}');
-        }
+        // Generic error - don't reveal if email exists or not (prevents email enumeration)
+        throw Exception('If this email exists, a password reset link has been sent.');
       }
     } catch (e) {
-      print('❌ Forgot password error: $e');
-      // If it's already an Exception, rethrow it
       if (e is Exception) rethrow;
-      throw Exception('Error sending reset email: $e');
+      throw Exception('Unable to process request. Please try again later.');
     }
   }
 
@@ -300,8 +304,8 @@ class AuthService {
       throw Exception('Invalid email format');
     }
 
-    if (request.password.length < 6) {
-      throw Exception('Password must be at least 6 characters');
+    if (request.password.length < 8) {
+      throw Exception('Password must be at least 8 characters');
     }
 
     // Mock successful response
@@ -330,8 +334,8 @@ class AuthService {
       throw Exception('Invalid email format');
     }
 
-    if (request.password.length < 6) {
-      throw Exception('Password must be at least 6 characters');
+    if (request.password.length < 8) {
+      throw Exception('Password must be at least 8 characters');
     }
 
     // Mock successful response
