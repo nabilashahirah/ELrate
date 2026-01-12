@@ -107,11 +107,42 @@ class SearchViewModel extends ChangeNotifier {
       return matchesSearch && matchesFaculty && matchesRating;
     }).toList();
 
+    // Sort results: when rating filter is active, sort by rating descending
+    if (_minRating > 0) {
+      _searchResults.sort((a, b) {
+        final ratingComparison = b.averageRating.compareTo(a.averageRating);
+        if (ratingComparison != 0) return ratingComparison;
+        // Tiebreaker: more reviews first
+        return b.totalReviews.compareTo(a.totalReviews);
+      });
+    }
+
     notifyListeners();
   }
 
-  /// Refresh courses
+  /// Refresh courses while preserving filters
   Future<void> refresh() async {
-    await initialize();
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      // Fetch fresh data from API
+      _allCourses = await _apiService.getCourses();
+      _errorMessage = null;
+
+      // Extract unique faculties from courses
+      _extractUniqueFaculties();
+
+      // Reapply existing filters to the new data
+      _applyFilters();
+    } catch (e) {
+      _errorMessage = e.toString();
+      _allCourses = [];
+      _searchResults = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }
