@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../viewmodels/add_review_viewmodel.dart';
 import '../utils/constants.dart';
 import '../services/api_service.dart';
+import '../utils/responsive.dart';
 
 class AddReviewScreen extends StatelessWidget {
   final String courseId;
@@ -100,13 +101,13 @@ class _AddReviewViewState extends State<_AddReviewView> {
     }
   }
 
-  Widget _buildStarRating(AddReviewViewModel viewModel) {
+  Widget _buildStarRating(AddReviewViewModel viewModel, Responsive responsive) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(5, (index) {
         final starIndex = index + 1;
         return IconButton(
-          iconSize: 40,
+          iconSize: responsive.iconSize(40),
           icon: Icon(
             starIndex <= viewModel.rating ? Icons.star_rounded : Icons.star_outline_rounded,
             color: Colors.amber,
@@ -119,41 +120,42 @@ class _AddReviewViewState extends State<_AddReviewView> {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
     return Scaffold(
       appBar: AppBar(title: Text("Rate ${widget.courseId}")),
       body: Padding(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(responsive.spacing(20)),
         child: Consumer<AddReviewViewModel>(
           builder: (context, viewModel, child) {
             return SingleChildScrollView(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(responsive.spacing(20)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Course Info Header
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.all(responsive.spacing(16)),
                     decoration: BoxDecoration(
                       color: Color(0xFF800000).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(responsive.spacing(12)),
                     ),
                     child: Column(
                       children: [
                         Text(
                           widget.courseId,
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: responsive.sp(20),
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF800000),
                           ),
                         ),
-                        SizedBox(height: 4),
-                        Text("How was your experience?"),
+                        SizedBox(height: responsive.spacing(4)),
+                        Text("How was your experience?", style: TextStyle(fontSize: responsive.sp(14))),
                       ],
                     ),
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: responsive.spacing(24)),
 
                   // Rating Section
                   Center(
@@ -161,10 +163,10 @@ class _AddReviewViewState extends State<_AddReviewView> {
                       children: [
                         Text(
                           "Your Rating",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: responsive.sp(16), fontWeight: FontWeight.w600),
                         ),
-                        SizedBox(height: 8),
-                        _buildStarRating(viewModel),
+                        SizedBox(height: responsive.spacing(8)),
+                        _buildStarRating(viewModel, responsive),
                         Text(
                           viewModel.rating == 1 ? "Poor" :
                           viewModel.rating == 2 ? "Fair" :
@@ -172,20 +174,21 @@ class _AddReviewViewState extends State<_AddReviewView> {
                           viewModel.rating == 4 ? "Very Good" : "Excellent",
                           style: TextStyle(
                             color: Colors.amber[800],
+                            fontSize: responsive.sp(14),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 32),
+                  SizedBox(height: responsive.spacing(32)),
 
                   // Comment Section
                   Text(
                     "Review",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: responsive.sp(16), fontWeight: FontWeight.w600),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: responsive.spacing(8)),
                   TextField(
                     controller: _commentController,
                     maxLength: 500,
@@ -193,35 +196,36 @@ class _AddReviewViewState extends State<_AddReviewView> {
                     decoration: InputDecoration(
                       hintText: "Share your thoughts about the course content, lecturer, and difficulty...",
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(responsive.spacing(12)),
                       ),
                       filled: true,
                       fillColor: Colors.white,
-                      contentPadding: EdgeInsets.all(16),
+                      contentPadding: EdgeInsets.all(responsive.spacing(16)),
                     ),
+                    style: TextStyle(fontSize: responsive.sp(14)),
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: responsive.spacing(24)),
 
                   // Options Section
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(responsive.spacing(12)),
                       border: Border.all(color: Colors.grey.shade200),
                     ),
                     child: Column(
                       children: [
                         SwitchListTile(
-                          title: Text("Post Anonymously"),
-                          subtitle: Text("Hide your name from other students"),
+                          title: Text("Post Anonymously", style: TextStyle(fontSize: responsive.sp(14))),
+                          subtitle: Text("Hide your name from other students", style: TextStyle(fontSize: responsive.sp(12))),
                           value: viewModel.isAnonymous,
                           activeColor: Color(0xFF800000),
                           onChanged: (val) => viewModel.toggleAnonymous(val),
                         ),
                         Divider(height: 1),
                         CheckboxListTile(
-                          title: Text("Recommend this course?"),
-                          subtitle: Text("Help others decide"),
+                          title: Text("Recommend this course?", style: TextStyle(fontSize: responsive.sp(14))),
+                          subtitle: Text("Help others decide", style: TextStyle(fontSize: responsive.sp(12))),
                           value: viewModel.isRecommended,
                           activeColor: Colors.green,
                           onChanged: (val) => viewModel.toggleRecommended(val ?? false),
@@ -229,25 +233,25 @@ class _AddReviewViewState extends State<_AddReviewView> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 32),
+                  SizedBox(height: responsive.spacing(32)),
 
                   // Submit Button
                   SizedBox(
                     width: double.infinity,
-                    height: 54,
+                    height: responsive.buttonHeight,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF800000),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(responsive.spacing(12)),
                         ),
                         elevation: 2,
                       ),
                       onPressed: viewModel.isLoading ? null : () => _submitReview(context),
                       child: viewModel.isLoading
-                          ? SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : Text("Submit Review", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ? SizedBox(height: responsive.spacing(24), width: responsive.spacing(24), child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Text("Submit Review", style: TextStyle(fontSize: responsive.sp(16), fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],

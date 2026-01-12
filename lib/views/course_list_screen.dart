@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/course_list_viewmodel.dart';
 import '../models/course.dart';
+import '../utils/responsive.dart';
 import 'course_detail_screen.dart';
 
 class CourseListScreen extends StatefulWidget {
@@ -79,35 +80,46 @@ class _CourseListScreenState extends State<CourseListScreen> {
   }
 
   Widget _buildCourseCard(BuildContext context, Course course) {
+    final responsive = context.responsive;
     return Card(
       elevation: 2,
-      margin: EdgeInsets.only(bottom: 15),
+      margin: EdgeInsets.only(bottom: responsive.spacing(15)),
       child: ListTile(
-        contentPadding: EdgeInsets.all(15),
+        contentPadding: EdgeInsets.all(responsive.spacing(15)),
         leading: CircleAvatar(
+          radius: responsive.avatarSize * 0.5,
           backgroundColor: Color(0xFF800000).withValues(alpha: 0.1),
           child: Text(
             course.id.substring(0, 3),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Color(0xFF800000),
-              fontSize: 12,
+              fontSize: responsive.sp(12),
             ),
           ),
         ),
         title: Text(
           course.id,
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: responsive.sp(14),
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(course.name),
-            SizedBox(height: 5),
+            Text(
+              course.name,
+              style: TextStyle(fontSize: responsive.sp(13)),
+            ),
+            SizedBox(height: responsive.spacing(5)),
             Row(
               children: [
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: responsive.spacing(8),
+                    vertical: responsive.spacing(2),
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(4),
@@ -115,14 +127,21 @@ class _CourseListScreenState extends State<CourseListScreen> {
                   child: Text(
                     course.facultyShort,
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: responsive.sp(10),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 Spacer(),
-                Icon(Icons.star, size: 14, color: Colors.amber),
-                Text(" ${course.averageRating.toStringAsFixed(1)} (${course.totalReviews})"),
+                Icon(
+                  Icons.star,
+                  size: responsive.iconSize(14),
+                  color: Colors.amber,
+                ),
+                Text(
+                  " ${course.averageRating.toStringAsFixed(1)} (${course.totalReviews})",
+                  style: TextStyle(fontSize: responsive.sp(12)),
+                ),
               ],
             ),
           ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/responsive.dart';
 import 'home_screen.dart';
 import 'search_screen.dart';
 import 'profile_screen.dart';
@@ -21,6 +22,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
     final screens = [
       HomeScreen(),
       SearchScreen(),
@@ -34,9 +36,9 @@ class _MainNavigationState extends State<MainNavigation> {
       ),
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
-          indicatorColor: Color(0xFF800000).withOpacity(0.15),
+          indicatorColor: Color(0xFF800000).withValues(alpha: 0.15),
           labelTextStyle: MaterialStateProperty.all(
-            TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            TextStyle(fontSize: responsive.sp(12), fontWeight: FontWeight.w600),
           ),
           iconTheme: MaterialStateProperty.resolveWith((states) {
             if (states.contains(MaterialState.selected)) {

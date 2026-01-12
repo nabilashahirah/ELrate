@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/profile_viewmodel.dart';
+import '../utils/responsive.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'auth/login_screen.dart';
 import '../models/review.dart';
@@ -25,6 +26,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Profile"),
@@ -45,12 +48,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // Profile Header
                   _buildProfileHeader(viewModel),
 
-                  SizedBox(height: 10),
+                  SizedBox(height: responsive.spacing(10)),
 
                   // Profile Options
                   _buildProfileOptions(context, viewModel),
 
-                  SizedBox(height: 10),
+                  SizedBox(height: responsive.spacing(10)),
 
                   // My Reviews Section
                   _buildMyReviews(viewModel),
@@ -65,6 +68,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProfileHeader(ProfileViewModel viewModel) {
     final user = viewModel.user;
+    final responsive = context.responsive;
 
     return Container(
       decoration: BoxDecoration(
@@ -78,56 +82,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, 40, 20, 40),
+      padding: EdgeInsets.fromLTRB(
+        responsive.spacing(20),
+        responsive.spacing(40),
+        responsive.spacing(20),
+        responsive.spacing(40)
+      ),
       child: Column(
         children: [
           // Avatar
           Container(
-            padding: EdgeInsets.all(4),
+            padding: EdgeInsets.all(responsive.spacing(4)),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white.withOpacity(0.2),
             ),
             child: CircleAvatar(
-              radius: 50,
+              radius: responsive.avatarSize * 1.0,
               backgroundColor: Colors.white,
               child: Text(
                 user?.initials ?? 'U',
                 style: TextStyle(
-                  fontSize: 32,
+                  fontSize: responsive.sp(32),
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF800000),
                 ),
               ),
             ),
           ),
-          SizedBox(height: 15),
+          SizedBox(height: responsive.spacing(15)),
 
           // Name
           Text(
             user?.name ?? 'User',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: responsive.sp(24),
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 5),
+          SizedBox(height: responsive.spacing(5)),
 
           // Email
           Text(
             user?.email ?? 'user@upm.edu.my',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: responsive.sp(14),
               color: Colors.white.withOpacity(0.8),
             ),
           ),
 
-          SizedBox(height: 24),
+          SizedBox(height: responsive.spacing(24)),
 
           // Stats
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: EdgeInsets.symmetric(
+              horizontal: responsive.spacing(20),
+              vertical: responsive.spacing(10)
+            ),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(20),
@@ -135,13 +147,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.rate_review_rounded, color: Colors.white, size: 20),
-                SizedBox(width: 8),
+                Icon(Icons.rate_review_rounded, color: Colors.white, size: responsive.iconSize(20)),
+                SizedBox(width: responsive.spacing(8)),
                 Text(
                   "${viewModel.myReviews.length} Reviews",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
+                    fontSize: responsive.sp(14),
                   ),
                 ),
               ],
@@ -153,8 +166,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileOptions(BuildContext context, ProfileViewModel viewModel) {
+    final responsive = context.responsive;
+
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: responsive.spacing(20)),
       child: Card(
         elevation: 2,
         shadowColor: Colors.black12,
@@ -230,15 +245,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildMyReviews(ProfileViewModel viewModel) {
+    final responsive = context.responsive;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+          padding: EdgeInsets.fromLTRB(
+            responsive.spacing(20),
+            responsive.spacing(20),
+            responsive.spacing(20),
+            responsive.spacing(10)
+          ),
           child: Text(
             "My Reviews",
             style: TextStyle(
-              fontSize: 18,
+              fontSize: responsive.sp(18),
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
@@ -247,7 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (viewModel.isLoading)
           Center(
             child: Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(responsive.spacing(20)),
               child: CircularProgressIndicator(
                 color: Color(0xFF800000),
               ),
@@ -256,23 +278,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         else if (viewModel.myReviews.isEmpty)
           Center(
             child: Padding(
-              padding: EdgeInsets.all(40),
+              padding: EdgeInsets.all(responsive.spacing(40)),
               child: Column(
                 children: [
-                  Icon(Icons.rate_review_outlined, size: 60, color: Colors.grey),
-                  SizedBox(height: 16),
+                  Icon(Icons.rate_review_outlined, size: responsive.iconSize(60), color: Colors.grey),
+                  SizedBox(height: responsive.spacing(16)),
                   Text(
                     "No reviews yet",
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: responsive.sp(16),
                       color: Colors.grey[600],
                     ),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: responsive.spacing(8)),
                   Text(
                     "Start rating courses to see them here",
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: responsive.sp(14),
                       color: Colors.grey[500],
                     ),
                   ),
@@ -282,11 +304,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           )
         else
           ListView.separated(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: EdgeInsets.symmetric(
+              horizontal: responsive.spacing(20),
+              vertical: responsive.spacing(10)
+            ),
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
             itemCount: viewModel.myReviews.length,
-            separatorBuilder: (context, index) => SizedBox(height: 12),
+            separatorBuilder: (context, index) => SizedBox(height: responsive.spacing(12)),
             itemBuilder: (context, index) {
               return _buildReviewCard(viewModel.myReviews[index]);
             },
@@ -296,12 +321,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildReviewCard(Review review) {
+    final responsive = context.responsive;
+
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(responsive.spacing(16)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -309,7 +336,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: responsive.spacing(8),
+                    vertical: responsive.spacing(4)
+                  ),
                   decoration: BoxDecoration(
                     color: Color(0xFF800000).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -319,7 +349,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF800000),
-                      fontSize: 12,
+                      fontSize: responsive.sp(12),
                     ),
                   ),
                 ),
@@ -327,47 +357,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     "${review.timestamp!.day}/${review.timestamp!.month}/${review.timestamp!.year}",
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: responsive.sp(12),
                       color: Colors.grey[500],
                     ),
                   ),
               ],
             ),
-            SizedBox(height: 8),
+            SizedBox(height: responsive.spacing(8)),
             Row(
               children: [
                 Row(
                   children: [
-                    Icon(Icons.star_rounded, size: 18, color: Colors.amber),
-                    SizedBox(width: 4),
+                    Icon(Icons.star_rounded, size: responsive.iconSize(18), color: Colors.amber),
+                    SizedBox(width: responsive.spacing(4)),
                     Text(
                       review.rating.toStringAsFixed(1),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                        fontSize: responsive.sp(14),
                       ),
                     ),
                   ],
                 ),
               ],
             ),
-            SizedBox(height: 12),
+            SizedBox(height: responsive.spacing(12)),
             Text(
               review.comment,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: responsive.sp(14),
                 color: Colors.black87,
                 height: 1.4,
               ),
             ),
             // Badges for anonymous and recommended
             if (review.isAnonymous || review.isRecommended) ...[
-              SizedBox(height: 12),
+              SizedBox(height: responsive.spacing(12)),
               Row(
                 children: [
                   if (review.isAnonymous)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: responsive.spacing(8),
+                        vertical: responsive.spacing(4)
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(12),
@@ -375,12 +408,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.visibility_off, size: 12, color: Colors.grey[700]),
-                          SizedBox(width: 4),
+                          Icon(Icons.visibility_off, size: responsive.iconSize(12), color: Colors.grey[700]),
+                          SizedBox(width: responsive.spacing(4)),
                           Text(
                             'Anonymous',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: responsive.sp(11),
                               color: Colors.grey[700],
                               fontWeight: FontWeight.w500,
                             ),
@@ -389,10 +422,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   if (review.isAnonymous && review.isRecommended)
-                    SizedBox(width: 8),
+                    SizedBox(width: responsive.spacing(8)),
                   if (review.isRecommended)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: responsive.spacing(8),
+                        vertical: responsive.spacing(4)
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.green[50],
                         borderRadius: BorderRadius.circular(12),
@@ -400,12 +436,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.thumb_up, size: 12, color: Colors.green[700]),
-                          SizedBox(width: 4),
+                          Icon(Icons.thumb_up, size: responsive.iconSize(12), color: Colors.green[700]),
+                          SizedBox(width: responsive.spacing(4)),
                           Text(
                             'Recommended',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: responsive.sp(11),
                               color: Colors.green[700],
                               fontWeight: FontWeight.w500,
                             ),

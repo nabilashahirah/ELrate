@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/search_viewmodel.dart';
+import '../utils/responsive.dart';
 import '../models/course.dart';
 import 'course_detail_screen.dart';
 
@@ -31,110 +32,145 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Find Courses"),
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          // Search Input
-          _buildSearchInput(),
+      body: Consumer<SearchViewModel>(
+        builder: (context, viewModel, child) {
+          return RefreshIndicator(
+            onRefresh: () => viewModel.refresh(),
+            child: CustomScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              slivers: [
+                // Search Input
+                SliverToBoxAdapter(child: _buildSearchInput()),
 
-          // Filters
-          _buildFilters(),
+                // Filters
+                SliverToBoxAdapter(child: _buildFilters()),
 
-          // Results
-          Expanded(
-            child: Consumer<SearchViewModel>(
-              builder: (context, viewModel, child) {
-                if (viewModel.isLoading) {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF800000),
-                    ),
-                  );
-                }
-
-                if (viewModel.errorMessage != null && viewModel.searchResults.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.error_outline, size: 60, color: Colors.red),
-                        SizedBox(height: 16),
-                        Text(
-                          "Error loading courses",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(height: 8),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF800000),
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () => viewModel.initialize(),
-                          child: Text("Retry"),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (viewModel.searchResults.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.search_off, size: 60, color: Colors.grey),
-                        SizedBox(height: 16),
-                        Text(
-                          "No courses found",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          "Try adjusting your filters",
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                        SizedBox(height: 16),
-                        TextButton(
-                          onPressed: () {
-                            _searchController.clear();
-                            viewModel.clearFilters();
-                          },
-                          child: Text("Clear Filters"),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () => viewModel.refresh(),
-                  child: ListView.separated(
-                    padding: EdgeInsets.all(20),
-                    itemCount: viewModel.searchResults.length,
-                    separatorBuilder: (context, index) => SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      return _buildCourseCard(context, viewModel.searchResults[index]);
-                    },
-                  ),
-                );
-              },
+                // Results
+                _buildResultsList(viewModel, responsive),
+              ],
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildResultsList(SearchViewModel viewModel, Responsive responsive) {
+    if (viewModel.isLoading) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF800000),
           ),
-        ],
+        ),
+      );
+    }
+
+    if (viewModel.errorMessage != null && viewModel.searchResults.isEmpty) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: responsive.iconSize(60), color: Colors.red),
+              SizedBox(height: responsive.spacing(16)),
+              Text(
+                "Error loading courses",
+                style: TextStyle(fontSize: responsive.sp(18), fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: responsive.spacing(8)),
+              SizedBox(
+                height: responsive.buttonHeight,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF800000),
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () => viewModel.initialize(),
+                  child: Text("Retry", style: TextStyle(fontSize: responsive.sp(14))),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (viewModel.searchResults.isEmpty) {
+      return SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.search_off, size: responsive.iconSize(60), color: Colors.grey),
+              SizedBox(height: responsive.spacing(16)),
+              Text(
+                "No courses found",
+                style: TextStyle(fontSize: responsive.sp(18), fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: responsive.spacing(8)),
+              Text(
+                "Try adjusting your filters",
+                style: TextStyle(color: Colors.grey[600], fontSize: responsive.sp(14)),
+              ),
+              SizedBox(height: responsive.spacing(16)),
+              TextButton(
+                onPressed: () {
+                  _searchController.clear();
+                  viewModel.clearFilters();
+                },
+                child: Text("Clear Filters", style: TextStyle(fontSize: responsive.sp(14))),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SliverPadding(
+      padding: EdgeInsets.all(responsive.spacing(20)),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final course = viewModel.searchResults[index];
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index != viewModel.searchResults.length - 1
+                    ? responsive.spacing(16)
+                    : 0,
+              ),
+              child: _buildCourseCard(context, course),
+            );
+          },
+          childCount: viewModel.searchResults.length,
+        ),
       ),
     );
   }
 
   Widget _buildSearchInput() {
+    final responsive = context.responsive;
+
     return Container(
       decoration: BoxDecoration(
         color: Color(0xFF800000),
       ),
-      padding: EdgeInsets.fromLTRB(20, 0, 20, 30),
+      padding: EdgeInsets.fromLTRB(
+        responsive.spacing(20),
+        0,
+        responsive.spacing(20),
+        responsive.spacing(30)
+      ),
       child: Consumer<SearchViewModel>(
         builder: (context, viewModel, child) {
           return TextField(
@@ -178,6 +214,8 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildFilters() {
+    final responsive = context.responsive;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -189,7 +227,12 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ],
       ),
-      padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+      padding: EdgeInsets.fromLTRB(
+        responsive.spacing(20),
+        responsive.spacing(20),
+        responsive.spacing(20),
+        responsive.spacing(10)
+      ),
       child: Consumer<SearchViewModel>(
         builder: (context, viewModel, child) {
           return Column(
@@ -198,17 +241,17 @@ class _SearchScreenState extends State<SearchScreen> {
               // Faculty Filter
               Row(
                 children: [
-                  Icon(Icons.school, size: 16, color: Colors.grey[700]),
-                  SizedBox(width: 8),
+                  Icon(Icons.school, size: responsive.iconSize(16), color: Colors.grey[700]),
+                  SizedBox(width: responsive.spacing(8)),
                   Text(
                     "Faculty:",
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: responsive.sp(14),
                       fontWeight: FontWeight.bold,
                       color: Colors.grey[700],
                     ),
                   ),
-                  SizedBox(width: 10),
+                  SizedBox(width: responsive.spacing(10)),
                   Expanded(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -216,7 +259,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         children: viewModel.availableFaculties.map((faculty) {
                           final isSelected = viewModel.selectedFaculty == faculty;
                           return Padding(
-                            padding: EdgeInsets.only(right: 8),
+                            padding: EdgeInsets.only(right: responsive.spacing(8)),
                             child: FilterChip(
                               label: Text(faculty),
                               selected: isSelected,
@@ -235,7 +278,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               labelStyle: TextStyle(
                                 color: isSelected ? Colors.white : Colors.grey[700],
                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                fontSize: 12,
+                                fontSize: responsive.sp(12),
                               ),
                             ),
                           );
@@ -245,17 +288,17 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 15),
+              SizedBox(height: responsive.spacing(15)),
 
               // Rating Filter
               Row(
                 children: [
-                  Icon(Icons.star, size: 16, color: Colors.amber),
-                  SizedBox(width: 8),
+                  Icon(Icons.star, size: responsive.iconSize(16), color: Colors.amber),
+                  SizedBox(width: responsive.spacing(8)),
                   Text(
                     "Min Rating: ${viewModel.minRating.toStringAsFixed(1)}",
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: responsive.sp(14),
                       fontWeight: FontWeight.bold,
                       color: Colors.grey[700],
                     ),
@@ -286,8 +329,8 @@ class _SearchScreenState extends State<SearchScreen> {
                       _searchController.clear();
                       viewModel.clearFilters();
                     },
-                    icon: Icon(Icons.clear_all, size: 16),
-                    label: Text("Clear All Filters"),
+                    icon: Icon(Icons.clear_all, size: responsive.iconSize(16)),
+                    label: Text("Clear All Filters", style: TextStyle(fontSize: responsive.sp(14))),
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0xFF800000),
                     ),
@@ -301,6 +344,9 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildCourseCard(BuildContext context, Course course) {
+    final responsive = context.responsive;
+    final cardIconSize = responsive.isMobile ? 50.0 : 60.0;
+
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
@@ -318,13 +364,13 @@ class _SearchScreenState extends State<SearchScreen> {
           }
         },
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(responsive.spacing(16)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 50,
-                height: 50,
+                width: cardIconSize,
+                height: cardIconSize,
                 decoration: BoxDecoration(
                   color: Color(0xFF800000).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -335,11 +381,11 @@ class _SearchScreenState extends State<SearchScreen> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF800000),
-                    fontSize: 14,
+                    fontSize: responsive.sp(14),
                   ),
                 ),
               ),
-              SizedBox(width: 16),
+              SizedBox(width: responsive.spacing(16)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,25 +395,28 @@ class _SearchScreenState extends State<SearchScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF800000),
-                        fontSize: 12,
+                        fontSize: responsive.sp(12),
                       ),
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: responsive.spacing(4)),
                     Text(
                       course.name,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                        fontSize: responsive.sp(15),
                         height: 1.2,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: responsive.spacing(12)),
                     Row(
                       children: [
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: responsive.spacing(8),
+                            vertical: responsive.spacing(4)
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(6),
@@ -375,27 +424,27 @@ class _SearchScreenState extends State<SearchScreen> {
                           child: Text(
                             course.facultyShort,
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: responsive.sp(11),
                               color: Colors.grey[700],
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
                         Spacer(),
-                        Icon(Icons.star_rounded, size: 16, color: Colors.amber),
-                        SizedBox(width: 4),
+                        Icon(Icons.star_rounded, size: responsive.iconSize(16), color: Colors.amber),
+                        SizedBox(width: responsive.spacing(4)),
                         Text(
                           course.averageRating.toStringAsFixed(1),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                            fontSize: responsive.sp(13),
                           ),
                         ),
                         Text(
                           " (${course.totalReviews})",
                           style: TextStyle(
                             color: Colors.grey[500],
-                            fontSize: 13,
+                            fontSize: responsive.sp(13),
                           ),
                         ),
                       ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/course_list_viewmodel.dart';
 import '../models/course.dart';
+import '../utils/responsive.dart';
 import 'course_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -36,6 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = context.responsive;
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Campus Hub"),
@@ -92,16 +95,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     slivers: [
                       // Top Rated Section
                       SliverToBoxAdapter(
-                        child: _buildSectionHeader("Top Rated", Icons.star_rounded),
+                        child: _buildSectionHeader(context, "Top Rated", Icons.star_rounded),
                       ),
                       SliverToBoxAdapter(
                         child: Container(
-                          height: 180,
+                          height: responsive.cardHeight,
                           child: ListView.separated(
-                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            padding: EdgeInsets.symmetric(horizontal: responsive.spacing(20)),
                             scrollDirection: Axis.horizontal,
                             itemCount: topRated.length,
-                            separatorBuilder: (context, index) => SizedBox(width: 16),
+                            separatorBuilder: (context, index) => SizedBox(width: responsive.spacing(16)),
                             itemBuilder: (context, index) {
                               return _buildFeaturedCourseCard(context, topRated[index]);
                             },
@@ -111,16 +114,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // Most Reviewed Section
                       SliverToBoxAdapter(
-                        child: _buildSectionHeader("Most Reviewed", Icons.rate_review_rounded),
+                        child: _buildSectionHeader(context, "Most Reviewed", Icons.rate_review_rounded),
                       ),
                       SliverToBoxAdapter(
                         child: Container(
-                          height: 180,
+                          height: responsive.cardHeight,
                           child: ListView.separated(
-                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            padding: EdgeInsets.symmetric(horizontal: responsive.spacing(20)),
                             scrollDirection: Axis.horizontal,
                             itemCount: mostReviewed.length,
-                            separatorBuilder: (context, index) => SizedBox(width: 16),
+                            separatorBuilder: (context, index) => SizedBox(width: responsive.spacing(16)),
                             itemBuilder: (context, index) {
                               return _buildFeaturedCourseCard(context, mostReviewed[index]);
                             },
@@ -130,10 +133,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // All Courses Section
                       SliverToBoxAdapter(
-                        child: _buildSectionHeader("All Courses", Icons.library_books_rounded),
+                        child: _buildSectionHeader(context, "All Courses", Icons.library_books_rounded),
                       ),
                       SliverPadding(
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: responsive.spacing(20),
+                          vertical: responsive.spacing(10),
+                        ),
                         sliver: SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
@@ -155,24 +161,34 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
+  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+    final responsive = context.responsive;
     return Padding(
-      padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
+      padding: EdgeInsets.fromLTRB(
+        responsive.spacing(20),
+        responsive.spacing(24),
+        responsive.spacing(20),
+        responsive.spacing(12),
+      ),
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(8),
+            padding: EdgeInsets.all(responsive.spacing(8)),
             decoration: BoxDecoration(
               color: Color(0xFF800000).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: Color(0xFF800000), size: 20),
+            child: Icon(
+              icon,
+              color: Color(0xFF800000),
+              size: responsive.iconSize(20),
+            ),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: responsive.spacing(12)),
           Text(
             title,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: responsive.sp(18),
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
@@ -183,8 +199,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFeaturedCourseCard(BuildContext context, Course course) {
+    final responsive = context.responsive;
     return Container(
-      width: 160,
+      width: responsive.cardWidth,
       child: Card(
         elevation: 2,
         shadowColor: Colors.black12,
@@ -216,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
               },
               child: Padding(
-                padding: EdgeInsets.all(12),
+                padding: EdgeInsets.all(responsive.spacing(12)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -224,7 +241,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: responsive.spacing(8),
+                            vertical: responsive.spacing(4),
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
@@ -233,20 +253,24 @@ class _HomeScreenState extends State<HomeScreen> {
                             course.facultyShort,
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 10,
+                              fontSize: responsive.sp(10),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                         Row(
                           children: [
-                            Icon(Icons.star_rounded, size: 16, color: Colors.amber),
-                            SizedBox(width: 4),
+                            Icon(
+                              Icons.star_rounded,
+                              size: responsive.iconSize(16),
+                              color: Colors.amber,
+                            ),
+                            SizedBox(width: responsive.spacing(4)),
                             Text(
                               course.averageRating.toStringAsFixed(1),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 12,
+                                fontSize: responsive.sp(12),
                                 color: Colors.white,
                               ),
                             ),
@@ -260,26 +284,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontSize: responsive.sp(18),
                       ),
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: responsive.spacing(4)),
                     Text(
                       course.name,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.9),
-                        fontSize: 12,
+                        fontSize: responsive.sp(12),
                         height: 1.2,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: responsive.spacing(8)),
                     Text(
                       "${course.totalReviews} Reviews",
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.7),
-                        fontSize: 11,
+                        fontSize: responsive.sp(11),
                       ),
                     ),
                   ],
@@ -293,6 +317,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCourseCard(BuildContext context, Course course) {
+    final responsive = context.responsive;
+    final iconSize = responsive.isMobile ? 50.0 : 65.0;
+
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
@@ -311,13 +338,13 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         },
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(responsive.spacing(16)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 50,
-                height: 50,
+                width: iconSize,
+                height: iconSize,
                 decoration: BoxDecoration(
                   color: Color(0xFF800000).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -328,11 +355,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF800000),
-                    fontSize: 14,
+                    fontSize: responsive.sp(14),
                   ),
                 ),
               ),
-              SizedBox(width: 16),
+              SizedBox(width: responsive.spacing(16)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,25 +369,28 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF800000),
-                        fontSize: 12,
+                        fontSize: responsive.sp(12),
                       ),
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: responsive.spacing(4)),
                     Text(
                       course.name,
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                        fontSize: responsive.sp(15),
                         height: 1.2,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 12),
+                    SizedBox(height: responsive.spacing(12)),
                     Row(
                       children: [
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: responsive.spacing(8),
+                            vertical: responsive.spacing(4),
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(6),
@@ -368,27 +398,31 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Text(
                             course.facultyShort,
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: responsive.sp(11),
                               color: Colors.grey[700],
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
                         Spacer(),
-                        Icon(Icons.star_rounded, size: 16, color: Colors.amber),
-                        SizedBox(width: 4),
+                        Icon(
+                          Icons.star_rounded,
+                          size: responsive.iconSize(16),
+                          color: Colors.amber,
+                        ),
+                        SizedBox(width: responsive.spacing(4)),
                         Text(
                           course.averageRating.toStringAsFixed(1),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                            fontSize: responsive.sp(13),
                           ),
                         ),
                         Text(
                           " (${course.totalReviews})",
                           style: TextStyle(
                             color: Colors.grey[500],
-                            fontSize: 13,
+                            fontSize: responsive.sp(13),
                           ),
                         ),
                       ],

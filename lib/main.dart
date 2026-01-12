@@ -4,6 +4,7 @@ import 'viewmodels/course_list_viewmodel.dart';
 import 'viewmodels/search_viewmodel.dart';
 import 'viewmodels/profile_viewmodel.dart';
 import 'viewmodels/auth_viewmodel.dart';
+import 'utils/responsive.dart';
 import 'views/main_navigation.dart';
 import 'views/splash_intro_screen.dart';
 
@@ -82,31 +83,48 @@ class _AuthWrapperState extends State<AuthWrapper> {
       builder: (context, authViewModel, child) {
         // Show loading while checking auth status
         if (authViewModel.isLoading) {
+          // Use Builder to access context with MediaQuery
           return Scaffold(
             backgroundColor: Colors.white,
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Color(0xFF800000).withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Image.asset(
-                      'assets/logo.png',
-                      width: 64,
-                      height: 64,
-                      color: Color(0xFF800000),
-                    ),
-                  ),
-                  SizedBox(height: 32),
-                  CircularProgressIndicator(
-                    color: Color(0xFF800000),
-                  ),
-                ],
-              ),
+            body: Builder(
+              builder: (context) {
+                final responsive = context.responsive;
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(responsive.spacing(24)),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF800000).withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Image.asset(
+                                  'assets/logo.png',
+                                  width: responsive.logoSize * 0.64,
+                                  height: responsive.logoSize * 0.64,
+                                  color: Color(0xFF800000),
+                                ),
+                              ),
+                              SizedBox(height: responsive.spacing(32)),
+                              CircularProgressIndicator(
+                                color: Color(0xFF800000),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           );
         }
