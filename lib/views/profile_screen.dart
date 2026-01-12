@@ -5,6 +5,9 @@ import '../utils/responsive.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'auth/login_screen.dart';
 import '../models/review.dart';
+import '../models/course.dart';
+import '../services/api_service.dart';
+import 'course_detail_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -134,31 +137,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           SizedBox(height: responsive.spacing(24)),
 
-          // Stats
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: responsive.spacing(20),
-              vertical: responsive.spacing(10)
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.rate_review_rounded, color: Colors.white, size: responsive.iconSize(20)),
-                SizedBox(width: responsive.spacing(8)),
-                Text(
-                  "${viewModel.myReviews.length} Reviews",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: responsive.sp(14),
+          // Stats Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Total Reviews
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.spacing(16),
+                  vertical: responsive.spacing(12)
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      "${viewModel.myReviews.length}",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: responsive.sp(24),
+                      ),
+                    ),
+                    SizedBox(height: responsive.spacing(4)),
+                    Row(
+                      children: [
+                        Icon(Icons.rate_review_rounded, color: Colors.white.withOpacity(0.9), size: responsive.iconSize(14)),
+                        SizedBox(width: responsive.spacing(4)),
+                        Text(
+                          "Reviews",
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: responsive.sp(12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: responsive.spacing(12)),
+              // Average Rating Given
+              if (viewModel.myReviews.isNotEmpty)
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: responsive.spacing(16),
+                    vertical: responsive.spacing(12)
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        (viewModel.myReviews.map((r) => r.rating).reduce((a, b) => a + b) / viewModel.myReviews.length).toStringAsFixed(1),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: responsive.sp(24),
+                        ),
+                      ),
+                      SizedBox(height: responsive.spacing(4)),
+                      Row(
+                        children: [
+                          Icon(Icons.star_rounded, color: Colors.amber[300], size: responsive.iconSize(14)),
+                          SizedBox(width: responsive.spacing(4)),
+                          Text(
+                            "Avg Rating",
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: responsive.sp(12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
         ],
       ),
@@ -255,15 +316,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
             responsive.spacing(20),
             responsive.spacing(20),
             responsive.spacing(20),
-            responsive.spacing(10)
+            responsive.spacing(16)
           ),
-          child: Text(
-            "My Reviews",
-            style: TextStyle(
-              fontSize: responsive.sp(18),
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(responsive.spacing(10)),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF800000),
+                      Color(0xFFA00000),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.history_rounded,
+                  color: Colors.white,
+                  size: responsive.iconSize(22),
+                ),
+              ),
+              SizedBox(width: responsive.spacing(12)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "My Reviews",
+                    style: TextStyle(
+                      fontSize: responsive.sp(20),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  if (viewModel.myReviews.isNotEmpty)
+                    Text(
+                      "Tap any review to view the course",
+                      style: TextStyle(
+                        fontSize: responsive.sp(12),
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ),
         ),
         if (viewModel.isLoading)
@@ -281,13 +379,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: EdgeInsets.all(responsive.spacing(40)),
               child: Column(
                 children: [
-                  Icon(Icons.rate_review_outlined, size: responsive.iconSize(60), color: Colors.grey),
-                  SizedBox(height: responsive.spacing(16)),
+                  Container(
+                    padding: EdgeInsets.all(responsive.spacing(24)),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.rate_review_outlined,
+                      size: responsive.iconSize(48),
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                  SizedBox(height: responsive.spacing(20)),
                   Text(
                     "No reviews yet",
                     style: TextStyle(
-                      fontSize: responsive.sp(16),
-                      color: Colors.grey[600],
+                      fontSize: responsive.sp(18),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[700],
                     ),
                   ),
                   SizedBox(height: responsive.spacing(8)),
@@ -296,6 +406,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(
                       fontSize: responsive.sp(14),
                       color: Colors.grey[500],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: responsive.spacing(20)),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: responsive.spacing(20),
+                      vertical: responsive.spacing(10),
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF800000).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.lightbulb_outline, size: responsive.iconSize(16), color: Color(0xFF800000)),
+                        SizedBox(width: responsive.spacing(8)),
+                        Text(
+                          "Explore courses in Search tab",
+                          style: TextStyle(
+                            fontSize: responsive.sp(13),
+                            color: Color(0xFF800000),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -327,135 +464,283 @@ class _ProfileScreenState extends State<ProfileScreen> {
       elevation: 2,
       shadowColor: Colors.black12,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: EdgeInsets.all(responsive.spacing(16)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: responsive.spacing(8),
-                    vertical: responsive.spacing(4)
-                  ),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF800000).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    review.courseId,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF800000),
-                      fontSize: responsive.sp(12),
-                    ),
-                  ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () async {
+          // Fetch course details and navigate
+          try {
+            final apiService = ApiService();
+            final courses = await apiService.getCourses();
+            final course = courses.firstWhere(
+              (c) => c.id == review.courseId,
+              orElse: () => Course(
+                id: review.courseId,
+                name: "Unknown Course",
+                faculty: "",
+                facultyShort: "Gen",
+                description: "",
+                averageRating: 0.0,
+                totalReviews: 0,
+              ),
+            );
+
+            if (context.mounted) {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CourseDetailScreen(course: course),
                 ),
-                if (review.timestamp != null)
-                  Text(
-                    "${review.timestamp!.day}/${review.timestamp!.month}/${review.timestamp!.year}",
-                    style: TextStyle(
-                      fontSize: responsive.sp(12),
-                      color: Colors.grey[500],
+              );
+              // Refresh reviews after returning
+              if (context.mounted) {
+                context.read<ProfileViewModel>().fetchMyReviews();
+              }
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Failed to load course details")),
+              );
+            }
+          }
+        },
+        child: Padding(
+          padding: EdgeInsets.all(responsive.spacing(16)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with course ID, timestamp, and tap hint
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        // Course icon
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFF800000),
+                                Color(0xFFA00000),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            review.courseId.substring(0, review.courseId.length >= 3 ? 3 : review.courseId.length),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: responsive.sp(12),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: responsive.spacing(12)),
+                        // Course ID
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                review.courseId,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF800000),
+                                  fontSize: responsive.sp(14),
+                                ),
+                              ),
+                              SizedBox(height: responsive.spacing(2)),
+                              Row(
+                                children: [
+                                  Icon(Icons.touch_app, size: responsive.iconSize(12), color: Colors.grey[500]),
+                                  SizedBox(width: responsive.spacing(4)),
+                                  Text(
+                                    "Tap to view course",
+                                    style: TextStyle(
+                                      fontSize: responsive.sp(11),
+                                      color: Colors.grey[500],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-              ],
-            ),
-            SizedBox(height: responsive.spacing(8)),
-            Row(
-              children: [
-                Row(
+                  SizedBox(width: responsive.spacing(8)),
+                  // Timestamp
+                  if (review.timestamp != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          _formatTimestamp(review.timestamp!),
+                          style: TextStyle(
+                            fontSize: responsive.sp(11),
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+              SizedBox(height: responsive.spacing(14)),
+
+              // Rating with stars
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: responsive.spacing(10),
+                  vertical: responsive.spacing(6),
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.star_rounded, size: responsive.iconSize(18), color: Colors.amber),
-                    SizedBox(width: responsive.spacing(4)),
+                    ...List.generate(5, (index) {
+                      return Icon(
+                        index < review.rating.floor()
+                            ? Icons.star_rounded
+                            : (index < review.rating ? Icons.star_half_rounded : Icons.star_outline_rounded),
+                        size: responsive.iconSize(16),
+                        color: Colors.amber[700],
+                      );
+                    }),
+                    SizedBox(width: responsive.spacing(6)),
                     Text(
                       review.rating.toStringAsFixed(1),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: responsive.sp(14),
+                        fontSize: responsive.sp(15),
+                        color: Colors.amber[800],
                       ),
                     ),
                   ],
                 ),
+              ),
+
+              SizedBox(height: responsive.spacing(14)),
+
+              // Comment with quote styling
+              Container(
+                padding: EdgeInsets.only(left: responsive.spacing(12)),
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(
+                      color: Color(0xFF800000).withOpacity(0.3),
+                      width: 3,
+                    ),
+                  ),
+                ),
+                child: Text(
+                  '"${review.comment}"',
+                  style: TextStyle(
+                    fontSize: responsive.sp(14),
+                    color: Colors.black87,
+                    height: 1.5,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+
+              // Badges for anonymous and recommended
+              if (review.isAnonymous || review.isRecommended) ...[
+                SizedBox(height: responsive.spacing(14)),
+                Wrap(
+                  spacing: responsive.spacing(8),
+                  runSpacing: responsive.spacing(8),
+                  children: [
+                    if (review.isAnonymous)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: responsive.spacing(10),
+                          vertical: responsive.spacing(6)
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.grey[300]!, width: 1),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.visibility_off, size: responsive.iconSize(14), color: Colors.grey[700]),
+                            SizedBox(width: responsive.spacing(6)),
+                            Text(
+                              'Anonymous',
+                              style: TextStyle(
+                                fontSize: responsive.sp(12),
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (review.isRecommended)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: responsive.spacing(10),
+                          vertical: responsive.spacing(6)
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green[50],
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.green[300]!, width: 1),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.thumb_up, size: responsive.iconSize(14), color: Colors.green[700]),
+                            SizedBox(width: responsive.spacing(6)),
+                            Text(
+                              'Recommended',
+                              style: TextStyle(
+                                fontSize: responsive.sp(12),
+                                color: Colors.green[700],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
               ],
-            ),
-            SizedBox(height: responsive.spacing(12)),
-            Text(
-              review.comment,
-              style: TextStyle(
-                fontSize: responsive.sp(14),
-                color: Colors.black87,
-                height: 1.4,
-              ),
-            ),
-            // Badges for anonymous and recommended
-            if (review.isAnonymous || review.isRecommended) ...[
-              SizedBox(height: responsive.spacing(12)),
-              Row(
-                children: [
-                  if (review.isAnonymous)
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: responsive.spacing(8),
-                        vertical: responsive.spacing(4)
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.visibility_off, size: responsive.iconSize(12), color: Colors.grey[700]),
-                          SizedBox(width: responsive.spacing(4)),
-                          Text(
-                            'Anonymous',
-                            style: TextStyle(
-                              fontSize: responsive.sp(11),
-                              color: Colors.grey[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (review.isAnonymous && review.isRecommended)
-                    SizedBox(width: responsive.spacing(8)),
-                  if (review.isRecommended)
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: responsive.spacing(8),
-                        vertical: responsive.spacing(4)
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.green[50],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.thumb_up, size: responsive.iconSize(12), color: Colors.green[700]),
-                          SizedBox(width: responsive.spacing(4)),
-                          Text(
-                            'Recommended',
-                            style: TextStyle(
-                              fontSize: responsive.sp(11),
-                              color: Colors.green[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
             ],
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inDays > 30) {
+      return "${timestamp.day}/${timestamp.month}/${timestamp.year}";
+    } else if (difference.inDays > 0) {
+      return "${difference.inDays}d ago";
+    } else if (difference.inHours > 0) {
+      return "${difference.inHours}h ago";
+    } else if (difference.inMinutes > 0) {
+      return "${difference.inMinutes}m ago";
+    } else {
+      return "Just now";
+    }
   }
 
   void _showEditProfileDialog(BuildContext context, ProfileViewModel viewModel) {
