@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io'; // For SocketException
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -50,6 +51,11 @@ class AuthService {
         Uri.parse(_loginUrl),
         headers: {"Content-Type": "application/json"},
         body: json.encode(request.toJson()),
+      ).timeout(
+        const Duration(seconds: 30), // 30 seconds for cold start
+        onTimeout: () {
+          throw Exception('Connection timeout. Please check your internet and try again.');
+        },
       );
 
       if (response.statusCode == 200) {
@@ -64,9 +70,17 @@ class AuthService {
         // Generic error message - don't reveal if user exists or password is wrong
         throw Exception('Invalid email or password');
       }
+    } on SocketException {
+      // Network error - no internet connection
+      throw Exception('No internet connection. Please check your network and try again.');
+    } on FormatException {
+      // Invalid response format
+      throw Exception('Invalid server response. Please try again later.');
     } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Unable to sign in. Please check your connection and try again.');
+      // Re-throw if already an Exception with our message
+      if (e is Exception && e.toString().contains('Exception:')) rethrow;
+      // Generic fallback for unexpected errors
+      throw Exception('Unable to sign in. Please try again later.');
     }
   }
 
@@ -119,9 +133,17 @@ class AuthService {
         // Generic error message - don't expose backend details
         throw Exception('Unable to create account. Please try a different email.');
       }
+    } on SocketException {
+      // Network error - no internet connection
+      throw Exception('No internet connection. Please check your network and try again.');
+    } on FormatException {
+      // Invalid response format
+      throw Exception('Invalid server response. Please try again later.');
     } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Unable to sign up. Please check your connection and try again.');
+      // Re-throw if already an Exception with our message
+      if (e is Exception && e.toString().contains('Exception:')) rethrow;
+      // Generic fallback for unexpected errors
+      throw Exception('Unable to sign up. Please try again later.');
     }
   }
 
@@ -292,6 +314,13 @@ class AuthService {
 
   /// Mock login (for testing without backend)
   Future<AuthResponse> mockLogin(LoginRequest request) async {
+    // Security: Ensure mock methods are NEVER run in release mode
+    bool isDebug = false;
+    assert(isDebug = true);
+    if (!isDebug) {
+      throw Exception('Mock login is not available in release builds.');
+    }
+
     // Simulate network delay
     await Future.delayed(Duration(seconds: 1));
 
@@ -322,6 +351,13 @@ class AuthService {
 
   /// Mock signup (for testing without backend)
   Future<AuthResponse> mockSignup(SignupRequest request) async {
+    // Security: Ensure mock methods are NEVER run in release mode
+    bool isDebug = false;
+    assert(isDebug = true);
+    if (!isDebug) {
+      throw Exception('Mock signup is not available in release builds.');
+    }
+
     // Simulate network delay
     await Future.delayed(Duration(seconds: 1));
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/add_review_viewmodel.dart';
-import '../utils/constants.dart';
 import '../services/api_service.dart';
 import '../utils/responsive.dart';
 
@@ -30,7 +29,8 @@ class _AddReviewView extends StatefulWidget {
 
 class _AddReviewViewState extends State<_AddReviewView> {
   final TextEditingController _commentController = TextEditingController();
-  List<String> _harshWords = AppConstants.harshWords; // Initialize with fallback
+  List<String> _harshWords = []; // Will be fetched from backend
+  bool _harshWordsLoaded = false;
 
   @override
   void initState() {
@@ -44,10 +44,17 @@ class _AddReviewViewState extends State<_AddReviewView> {
       if (mounted) {
         setState(() {
           _harshWords = words;
+          _harshWordsLoaded = true;
         });
       }
     } catch (_) {
-      // Keep using default list if fetch fails
+      // Mark as loaded even if fetch fails
+      // Backend will still validate on submission
+      if (mounted) {
+        setState(() {
+          _harshWordsLoaded = true;
+        });
+      }
     }
   }
 
@@ -58,11 +65,31 @@ class _AddReviewViewState extends State<_AddReviewView> {
   }
 
   bool _containsHarshWords(String text) {
-    // Basic list of inappropriate words for academic context
+    // Only validate if harsh words list was successfully loaded
+    if (_harshWords.isEmpty) {
+      // Skip client-side check if list not loaded
+      // Backend will still validate on submission
+      return false;
+    }
+
     final lowerText = text.toLowerCase();
     for (final word in _harshWords) {
-      // Check for whole words to avoid false positives (e.g., "class" containing "ass")
-      if (RegExp(r'\b' + RegExp.escape(word) + r'\b').hasMatch(lowerText)) {
+      // Check if the word appears in the text (with word boundaries)
+      // Also check for variations like "fuckk" → check if text contains the base word
+      final escapedWord = RegExp.escape(word);
+
+      // Pattern 1: Exact word match with boundaries
+      if (RegExp(r'\b' + escapedWord + r'\b', caseSensitive: false).hasMatch(lowerText)) {
+        return true;
+      }
+
+      // Pattern 2: Repeated letters (e.g., "fuckk", "shiiit")
+      if (RegExp(r'\b' + escapedWord + r'+', caseSensitive: false).hasMatch(lowerText)) {
+        return true;
+      }
+
+      // Pattern 3: Word with extra characters (e.g., "f*ck", "sh!t")
+      if (lowerText.contains(word)) {
         return true;
       }
     }
@@ -70,6 +97,7 @@ class _AddReviewViewState extends State<_AddReviewView> {
   }
 
   Future<void> _submitReview(BuildContext context) async {
+    // Client-side harsh word check (if list was fetched)
     if (_containsHarshWords(_commentController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

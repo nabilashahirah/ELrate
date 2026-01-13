@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io'; // For SocketException
 import 'package:http/http.dart' as http;
 import '../models/course.dart';
 import '../models/review.dart';
@@ -28,10 +29,15 @@ class ApiService {
         final List<dynamic> jsonData = json.decode(response.body);
         return jsonData.map((json) => Course.fromJson(json)).toList();
       } else {
-        throw Exception('Failed to load courses: ${response.statusCode}');
+        throw Exception('Unable to load courses. Please try again later.');
       }
+    } on SocketException {
+      throw Exception('No internet connection. Please check your network.');
+    } on FormatException {
+      throw Exception('Invalid data received. Please try again later.');
     } catch (e) {
-      throw Exception('Error fetching courses: $e');
+      if (e is Exception && e.toString().contains('Exception:')) rethrow;
+      throw Exception('Unable to load courses. Please try again later.');
     }
   }
 
@@ -49,10 +55,15 @@ class ApiService {
         final List<dynamic> jsonData = json.decode(response.body);
         return jsonData.map((json) => Review.fromJson(json)).toList();
       } else {
-        throw Exception('Failed to load reviews: ${response.statusCode}');
+        throw Exception('Unable to load reviews. Please try again later.');
       }
+    } on SocketException {
+      throw Exception('No internet connection. Please check your network.');
+    } on FormatException {
+      throw Exception('Invalid data received. Please try again later.');
     } catch (e) {
-      throw Exception('Error fetching reviews: $e');
+      if (e is Exception && e.toString().contains('Exception:')) rethrow;
+      throw Exception('Unable to load reviews. Please try again later.');
     }
   }
 
@@ -73,29 +84,43 @@ class ApiService {
         body: json.encode(review.toJson()),
       );
 
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        throw Exception('Failed to submit review: ${response.statusCode}');
+      if (response.statusCode == 400) {
+        // Backend validation error (e.g., harsh words)
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Invalid review. Please check your input.');
+      } else if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Unable to submit review. Please try again later.');
       }
+    } on SocketException {
+      throw Exception('No internet connection. Please check your network.');
+    } on FormatException {
+      throw Exception('Invalid response from server. Please try again later.');
     } catch (e) {
-      throw Exception('Error submitting review: $e');
+      if (e is Exception && e.toString().contains('Exception:')) rethrow;
+      throw Exception('Unable to submit review. Please try again later.');
     }
   }
 
   /// Fetch list of harsh words for content moderation
   Future<List<String>> getHarshWords() async {
     try {
-      final response = await http.get(Uri.parse(_getHarshWordsUrl));
+      final response = await http.get(
+        Uri.parse(_getHarshWordsUrl),
+        headers: {"Content-Type": "application/json"},
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
         return jsonData.map((e) => e.toString()).toList();
       } else {
-        // Fallback to local constants if API fails
-        return AppConstants.harshWords;
+        // Return empty list if API fails - backend will still validate
+        // This prevents exposing the word list in the app
+        return [];
       }
     } catch (e) {
-      // Fallback to local constants on error
-      return AppConstants.harshWords;
+      // Return empty list on error - backend will still validate
+      // Security: Do NOT expose the harsh words list in client code
+      return [];
     }
   }
 }
