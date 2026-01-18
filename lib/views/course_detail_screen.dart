@@ -117,18 +117,34 @@ class _CourseDetailView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: responsive.spacing(10), vertical: responsive.spacing(5)),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(responsive.spacing(20)),
-                ),
-                child: Text(
-                  course.faculty,
-                  style: TextStyle(color: Colors.white, fontSize: responsive.sp(12), fontWeight: FontWeight.w500),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: responsive.spacing(10), vertical: responsive.spacing(5)),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(responsive.spacing(20)),
+                    ),
+                    child: Text(
+                      course.faculty,
+                      style: TextStyle(color: Colors.white, fontSize: responsive.sp(12), fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  SizedBox(width: responsive.spacing(8)),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: responsive.spacing(10), vertical: responsive.spacing(5)),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(responsive.spacing(20)),
+                    ),
+                    child: Text(
+                      course.universityId ?? 'UPM',
+                      style: TextStyle(color: Colors.white, fontSize: responsive.sp(12), fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: responsive.spacing(8)),
               Text(

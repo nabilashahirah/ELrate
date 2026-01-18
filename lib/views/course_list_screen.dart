@@ -84,68 +84,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
     return Card(
       elevation: 2,
       margin: EdgeInsets.only(bottom: responsive.spacing(15)),
-      child: ListTile(
-        contentPadding: EdgeInsets.all(responsive.spacing(15)),
-        leading: CircleAvatar(
-          radius: responsive.avatarSize * 0.5,
-          backgroundColor: Color(0xFF800000).withValues(alpha: 0.1),
-          child: Text(
-            course.id.substring(0, 3),
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF800000),
-              fontSize: responsive.sp(12),
-            ),
-          ),
-        ),
-        title: Text(
-          course.id,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: responsive.sp(14),
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              course.name,
-              style: TextStyle(fontSize: responsive.sp(13)),
-            ),
-            SizedBox(height: responsive.spacing(5)),
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: responsive.spacing(8),
-                    vertical: responsive.spacing(2),
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    course.facultyShort,
-                    style: TextStyle(
-                      fontSize: responsive.sp(10),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Spacer(),
-                Icon(
-                  Icons.star,
-                  size: responsive.iconSize(14),
-                  color: Colors.amber,
-                ),
-                Text(
-                  " ${course.averageRating.toStringAsFixed(1)} (${course.totalReviews})",
-                  style: TextStyle(fontSize: responsive.sp(12)),
-                ),
-              ],
-            ),
-          ],
-        ),
+      child: InkWell(
         onTap: () async {
           // Navigate to course detail and refresh when coming back
           await Navigator.push(
@@ -158,6 +97,100 @@ class _CourseListScreenState extends State<CourseListScreen> {
             context.read<CourseListViewModel>().refreshCourses();
           }
         },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: EdgeInsets.all(responsive.spacing(15)),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Left side: Course code avatar
+              CircleAvatar(
+                radius: responsive.avatarSize * 0.45,
+                backgroundColor: Color(0xFF800000).withValues(alpha: 0.1),
+                child: Text(
+                  course.id.substring(0, 3),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF800000),
+                    fontSize: responsive.sp(11),
+                  ),
+                ),
+              ),
+              SizedBox(width: responsive.spacing(15)),
+              // Right side: Course details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      course.id,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: responsive.sp(14),
+                      ),
+                    ),
+                    SizedBox(height: responsive.spacing(4)),
+                    Text(
+                      course.name,
+                      style: TextStyle(fontSize: responsive.sp(13)),
+                    ),
+                    SizedBox(height: responsive.spacing(8)),
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: responsive.spacing(8),
+                            vertical: responsive.spacing(2),
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            course.facultyShort,
+                            style: TextStyle(
+                              fontSize: responsive.sp(10),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: responsive.spacing(6)),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: responsive.spacing(8),
+                            vertical: responsive.spacing(2),
+                          ),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF800000),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            course.universityId ?? 'UPM',
+                            style: TextStyle(
+                              fontSize: responsive.sp(10),
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+                        Icon(
+                          Icons.star,
+                          size: responsive.iconSize(14),
+                          color: Colors.amber,
+                        ),
+                        Text(
+                          " ${course.averageRating.toStringAsFixed(1)} (${course.totalReviews})",
+                          style: TextStyle(fontSize: responsive.sp(12)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -239,11 +239,6 @@ class _AddCourseViewState extends State<_AddCourseView> {
                     ),
                   ),
                   SizedBox(height: responsive.spacing(8)),
-                  // Debug: Show error or count
-                  if (viewModel.errorMessage != null)
-                    Text("Error: ${viewModel.errorMessage}", style: TextStyle(color: Colors.red, fontSize: 12)),
-                  Text("Universities loaded: ${viewModel.universities.length}", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  SizedBox(height: responsive.spacing(4)),
                   if (viewModel.isLoadingUniversities)
                     const Center(child: CircularProgressIndicator())
                   else

@@ -429,23 +429,46 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: responsive.spacing(8),
-                            vertical: responsive.spacing(4),
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            course.facultyShort,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: responsive.sp(10),
-                              fontWeight: FontWeight.bold,
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: responsive.spacing(8),
+                                vertical: responsive.spacing(4),
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                course.facultyShort,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: responsive.sp(10),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
-                          ),
+                            SizedBox(width: responsive.spacing(6)),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: responsive.spacing(8),
+                                vertical: responsive.spacing(4),
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                course.universityId ?? 'UPM',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: responsive.sp(10),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         Row(
                           children: [
@@ -641,7 +664,7 @@ class _ReviewCardExpandingState extends State<_ReviewCardExpanding> {
                                   vertical: responsive.spacing(1),
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFF800000).withOpacity(0.1),
+                                  color: Color(0xFF800000).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(3),
                                 ),
                                 child: Text(
@@ -649,6 +672,25 @@ class _ReviewCardExpandingState extends State<_ReviewCardExpanding> {
                                   style: TextStyle(
                                     fontSize: responsive.sp(7),
                                     color: Color(0xFF800000),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: responsive.spacing(3)),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: responsive.spacing(3),
+                                  vertical: responsive.spacing(1),
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFF800000),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                                child: Text(
+                                  course.universityId ?? 'UPM',
+                                  style: TextStyle(
+                                    fontSize: responsive.sp(7),
+                                    color: Colors.white,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),

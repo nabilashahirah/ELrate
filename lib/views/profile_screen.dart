@@ -256,11 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildOptionTile(
               icon: Icons.help_outline_rounded,
               title: "Help & Support",
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Help & Support coming soon!")),
-                );
-              },
+              onTap: () => _showHelpSupportDialog(context),
             ),
             _buildDivider(),
             _buildOptionTile(
@@ -837,29 +833,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showAboutDialog(BuildContext context) {
+  void _showHelpSupportDialog(BuildContext context) {
+    final responsive = context.responsive;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("About ELRate"),
+        title: Row(
+          children: [
+            Icon(Icons.help_outline_rounded, color: Color(0xFF800000)),
+            SizedBox(width: 10),
+            Text("Help & Support"),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "ELRate - UPM Course Rating System",
-              style: TextStyle(fontWeight: FontWeight.bold),
+              "Need help? Contact us!",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: responsive.sp(16)),
             ),
-            SizedBox(height: 10),
-            Text("Version: 1.0.0"),
-            SizedBox(height: 10),
+            SizedBox(height: 16),
             Text(
-              "A platform for students to rate and review university courses.",
+              "Email:",
+              style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF800000)),
             ),
-            SizedBox(height: 10),
-            Text(
-              "© 2026 UPM",
-              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.email_outlined, size: 18, color: Colors.grey[600]),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "elrate00@gmail.com",
+                    style: TextStyle(fontSize: responsive.sp(14)),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(Icons.email_outlined, size: 18, color: Colors.grey[600]),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "214478@student.upm.edu.my",
+                    style: TextStyle(fontSize: responsive.sp(14)),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Color(0xFF800000).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 20, color: Color(0xFF800000)),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      "We typically respond within 24-48 hours.",
+                      style: TextStyle(fontSize: responsive.sp(12), color: Colors.grey[700]),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -868,6 +911,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text("Close"),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _showAboutDialog(BuildContext context) {
+    final responsive = context.responsive;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.info_outline_rounded, color: Color(0xFF800000)),
+            SizedBox(width: 10),
+            Text("About ELRate"),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "ELRate - Course Rating System",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: responsive.sp(16)),
+              ),
+              SizedBox(height: 8),
+              Text("Version: 1.0.0"),
+              SizedBox(height: 16),
+              Text(
+                "A platform for students to rate and review university courses across Malaysia.",
+                style: TextStyle(color: Colors.grey[700]),
+              ),
+              SizedBox(height: 20),
+              Text(
+                "Developers:",
+                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF800000)),
+              ),
+              SizedBox(height: 10),
+              _buildDeveloperName("Nur Nabila Shahirah"),
+              _buildDeveloperName("Aein Zakira"),
+              _buildDeveloperName("Aliyah Kamaruyl"),
+              _buildDeveloperName("Yogeswari"),
+              _buildDeveloperName("Liu Xu Rui"),
+              SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Color(0xFF800000).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  "© 2026 ELRate Team\nUniversiti Putra Malaysia",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: responsive.sp(12), color: Colors.grey[700]),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Close"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeveloperName(String name) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          Icon(Icons.person_outline, size: 18, color: Color(0xFF800000)),
+          SizedBox(width: 8),
+          Text(name),
         ],
       ),
     );

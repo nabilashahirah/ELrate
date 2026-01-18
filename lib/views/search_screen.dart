@@ -470,6 +470,25 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                           ),
                         ),
+                        SizedBox(width: responsive.spacing(6)),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: responsive.spacing(8),
+                            vertical: responsive.spacing(4)
+                          ),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF800000),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            course.universityId ?? 'UPM',
+                            style: TextStyle(
+                              fontSize: responsive.sp(11),
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                         Spacer(),
                         Icon(Icons.star_rounded, size: responsive.iconSize(16), color: Colors.amber),
                         SizedBox(width: responsive.spacing(4)),
