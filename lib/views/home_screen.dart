@@ -8,7 +8,9 @@ import 'course_detail_screen.dart';
 import 'add_course_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final VoidCallback? onSeeAll;
+
+  const HomeScreen({Key? key, this.onSeeAll}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -62,20 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text("Campus Hub"),
         elevation: 0,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddCourseScreen()),
-          );
-          if (result == true && context.mounted) {
-            context.read<CourseListViewModel>().refreshCourses();
-          }
-        },
-        backgroundColor: const Color(0xFF800000),
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text("Add Course", style: TextStyle(color: Colors.white)),
-      ),
       body: Consumer<CourseListViewModel>(
               builder: (context, viewModel, child) {
                 if (viewModel.isLoading && viewModel.courses.isEmpty) {
@@ -127,7 +115,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     slivers: [
                       // Top Rated Section
                       SliverToBoxAdapter(
-                        child: _buildSectionHeader(context, "Top Rated", Icons.star_rounded),
+                        child: _buildSectionHeader(
+                          context, 
+                          "Top Rated", 
+                          Icons.star_rounded,
+                          showSeeAll: true,
+                        ),
                       ),
                       SliverToBoxAdapter(
                         child: Container(
@@ -200,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+  Widget _buildSectionHeader(BuildContext context, String title, IconData icon, {bool showSeeAll = false}) {
     final responsive = context.responsive;
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -210,28 +203,41 @@ class _HomeScreenState extends State<HomeScreen> {
         responsive.spacing(12),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            padding: EdgeInsets.all(responsive.spacing(8)),
-            decoration: BoxDecoration(
-              color: Color(0xFF800000).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              color: Color(0xFF800000),
-              size: responsive.iconSize(20),
-            ),
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(responsive.spacing(8)),
+                decoration: BoxDecoration(
+                  color: Color(0xFF800000).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  color: Color(0xFF800000),
+                  size: responsive.iconSize(20),
+                ),
+              ),
+              SizedBox(width: responsive.spacing(12)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: responsive.sp(18),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
           ),
-          SizedBox(width: responsive.spacing(12)),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: responsive.sp(18),
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
+          if (showSeeAll && widget.onSeeAll != null)
+            TextButton(
+              onPressed: widget.onSeeAll,
+              child: Text(
+                "See All",
+                style: TextStyle(color: Color(0xFF800000), fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
         ],
       ),
     );

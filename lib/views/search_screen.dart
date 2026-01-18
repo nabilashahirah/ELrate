@@ -4,6 +4,7 @@ import '../viewmodels/search_viewmodel.dart';
 import '../utils/responsive.dart';
 import '../models/course.dart';
 import 'course_detail_screen.dart';
+import 'add_course_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
@@ -35,9 +36,19 @@ class _SearchScreenState extends State<SearchScreen> {
     final responsive = context.responsive;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Find Courses"),
-        elevation: 0,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Color(0xFF800000),
+        child: Icon(Icons.add, color: Colors.white),
+        tooltip: 'Add New Course',
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddCourseScreen()),
+          );
+          if (result == true && context.mounted) {
+            context.read<SearchViewModel>().refresh();
+          }
+        },
       ),
       body: Consumer<SearchViewModel>(
         builder: (context, viewModel, child) {
@@ -46,6 +57,16 @@ class _SearchScreenState extends State<SearchScreen> {
             child: CustomScrollView(
               physics: AlwaysScrollableScrollPhysics(),
               slivers: [
+                // Dynamic App Bar
+                SliverAppBar(
+                  floating: true,
+                  pinned: true,
+                  backgroundColor: Color(0xFF800000),
+                  title: Text(viewModel.isFiltered 
+                      ? "Search Results (${viewModel.filteredCoursesCount})" 
+                      : "All Subjects"),
+                  elevation: 0,
+                ),
                 // Search Input
                 SliverToBoxAdapter(child: _buildSearchInput()),
 
@@ -124,6 +145,25 @@ class _SearchScreenState extends State<SearchScreen> {
                 style: TextStyle(color: Colors.grey[600], fontSize: responsive.sp(14)),
               ),
               SizedBox(height: responsive.spacing(16)),
+              // Suggest adding the course if not found
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF800000),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddCourseScreen()),
+                  );
+                  if (result == true && context.mounted) {
+                    viewModel.refresh();
+                  }
+                },
+                icon: Icon(Icons.add),
+                label: Text("Add This Course"),
+              ),
+              SizedBox(height: responsive.spacing(12)),
               TextButton(
                 onPressed: () {
                   _searchController.clear();

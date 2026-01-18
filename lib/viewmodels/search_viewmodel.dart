@@ -23,6 +23,11 @@ class SearchViewModel extends ChangeNotifier {
   double get minRating => _minRating;
   List<String> get availableFaculties => _availableFaculties;
 
+  // UI Helpers to distinguish between "All Courses" and "Search Results"
+  bool get isFiltered => _searchQuery.isNotEmpty || _selectedFaculty != 'All' || _minRating > 0;
+  int get totalCoursesCount => _allCourses.length;
+  int get filteredCoursesCount => _searchResults.length;
+
   /// Initialize by fetching all courses
   Future<void> initialize() async {
     _isLoading = true;

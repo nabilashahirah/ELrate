@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/add_course_viewmodel.dart';
+import '../viewmodels/course_list_viewmodel.dart';
 import '../models/university.dart';
 import '../utils/responsive.dart';
 import 'add_university_screen.dart';
@@ -32,8 +34,19 @@ class _AddCourseViewState extends State<_AddCourseView> {
   final _facultyShortController = TextEditingController();
   final _descriptionController = TextEditingController();
 
+  Timer? _debounce;
+  bool _isDuplicate = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _courseIdController.addListener(_onCourseIdChanged);
+  }
+
   @override
   void dispose() {
+    _debounce?.cancel();
+    _courseIdController.removeListener(_onCourseIdChanged);
     _courseIdController.dispose();
     _nameController.dispose();
     _facultyController.dispose();
@@ -42,10 +55,67 @@ class _AddCourseViewState extends State<_AddCourseView> {
     super.dispose();
   }
 
+  void _onCourseIdChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      final id = _courseIdController.text.trim();
+      if (id.isEmpty) {
+        if (_isDuplicate) setState(() => _isDuplicate = false);
+        return;
+      }
+
+      // Check locally against loaded courses
+      final courses = context.read<CourseListViewModel>().courses;
+      final exists = courses.any((c) => c.id.toLowerCase() == id.toLowerCase());
+
+      if (_isDuplicate != exists) {
+        setState(() => _isDuplicate = exists);
+      }
+    });
+  }
+
   Future<void> _submitCourse(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
 
     final viewModel = context.read<AddCourseViewModel>();
+
+    // Show confirmation dialog to prevent duplicates/typos
+    final shouldSubmit = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Confirm Course Details"),
+        content: SingleChildScrollView(
+          child: ListBody(
+            children: [
+              const Text("Please verify the details below. The Course Code must be unique."),
+              const SizedBox(height: 16),
+              _buildConfirmationRow("University", viewModel.selectedUniversity?.shortName ?? "-"),
+              const SizedBox(height: 8),
+              _buildConfirmationRow("Course Code", _courseIdController.text.toUpperCase()),
+              const SizedBox(height: 8),
+              _buildConfirmationRow("Course Name", _nameController.text),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF800000),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text("Confirm & Add"),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSubmit != true) return;
+
     final success = await viewModel.submitCourse(
       courseId: _courseIdController.text,
       name: _nameController.text,
@@ -86,6 +156,22 @@ class _AddCourseViewState extends State<_AddCourseView> {
       await viewModel.fetchUniversities();
       viewModel.selectUniversity(result);
     }
+  }
+
+  Widget _buildConfirmationRow(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.bold),
+        ),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
   }
 
   @override
@@ -235,8 +321,15 @@ class _AddCourseViewState extends State<_AddCourseView> {
                       filled: true,
                       fillColor: Colors.white,
                       contentPadding: EdgeInsets.all(responsive.spacing(16)),
+                      errorText: _isDuplicate ? "Course code already exists" : null,
+                      suffixIcon: _courseIdController.text.isNotEmpty
+                          ? (_isDuplicate
+                              ? const Icon(Icons.error, color: Colors.red)
+                              : (_courseIdController.text.length >= 3 ? const Icon(Icons.check_circle, color: Colors.green) : null))
+                          : null,
                     ),
                     validator: (value) {
+                      if (_isDuplicate) return 'Course already exists';
                       if (value == null || value.trim().isEmpty) {
                         return 'Course code is required';
                       }

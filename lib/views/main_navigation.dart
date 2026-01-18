@@ -24,7 +24,9 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget build(BuildContext context) {
     final responsive = context.responsive;
     final screens = [
-      HomeScreen(),
+      HomeScreen(
+        onSeeAll: () => _switchToTab(1), // Switch to Subjects tab
+      ),
       SearchScreen(),
       ProfileScreen(),
     ];
@@ -60,9 +62,9 @@ class _MainNavigationState extends State<MainNavigation> {
               label: 'Home',
             ),
             NavigationDestination(
-              icon: Icon(Icons.search_outlined),
-              selectedIcon: Icon(Icons.search_rounded),
-              label: 'Search',
+              icon: Icon(Icons.menu_book_outlined),
+              selectedIcon: Icon(Icons.menu_book_rounded),
+              label: 'Subjects',
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline_rounded),
