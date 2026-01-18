@@ -74,22 +74,51 @@ class _CourseDetailView extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Color(0xFF800000),
-        icon: Icon(Icons.edit, color: Colors.white),
-        label: Text("Write Review", style: TextStyle(color: Colors.white)),
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => AddReviewScreen(courseId: course.id),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFD4AF37), Color(0xFF800000)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0xFF800000).withValues(alpha: 0.4),
+              blurRadius: 12,
+              offset: Offset(0, 4),
             ),
-          );
-          // Refresh reviews when coming back
-          if (context.mounted) {
-            context.read<CourseDetailViewModel>().refreshReviews();
-          }
-        },
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AddReviewScreen(courseId: course.id),
+                ),
+              );
+              // Refresh reviews when coming back
+              if (context.mounted) {
+                context.read<CourseDetailViewModel>().refreshReviews();
+              }
+            },
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.edit, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text("Write Review", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

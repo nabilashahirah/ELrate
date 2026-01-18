@@ -412,15 +412,26 @@ class _SearchScreenState extends State<SearchScreen> {
                 width: cardIconSize,
                 height: cardIconSize,
                 decoration: BoxDecoration(
-                  color: Color(0xFF800000).withOpacity(0.1),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF800000), Color(0xFFB00000)],
+                  ),
                   borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF800000).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   course.id.substring(0, min(3, course.id.length)),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF800000),
+                    color: Colors.white,
                     fontSize: responsive.sp(14),
                   ),
                 ),

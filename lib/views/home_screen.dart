@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             itemCount: topRated.length,
                             separatorBuilder: (context, index) => SizedBox(width: responsive.spacing(16)),
                             itemBuilder: (context, index) {
-                              return _buildFeaturedCourseCard(context, topRated[index]);
+                              return _buildFeaturedCourseCard(context, topRated[index], index, isTopRated: true);
                             },
                           ),
                         ),
@@ -153,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             itemCount: mostReviewed.length,
                             separatorBuilder: (context, index) => SizedBox(width: responsive.spacing(16)),
                             itemBuilder: (context, index) {
-                              return _buildFeaturedCourseCard(context, mostReviewed[index]);
+                              return _buildFeaturedCourseCard(context, mostReviewed[index], index, isTopRated: false);
                             },
                           ),
                         ),
@@ -218,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
-            // Background Gradient
+            // Background Gradient - More colorful with gold accent
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -227,8 +227,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     end: Alignment.bottomRight,
                     colors: [
                       Color(0xFF800000),
-                      Color(0xFFA00000),
+                      Color(0xFF9A0000),
+                      Color(0xFFB8860B).withValues(alpha: 0.8),
                     ],
+                    stops: [0.0, 0.6, 1.0],
                   ),
                 ),
               ),
@@ -339,6 +341,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildSectionHeader(BuildContext context, String title, IconData icon, {bool showSeeAll = false}) {
     final responsive = context.responsive;
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
         responsive.spacing(20),
@@ -354,12 +357,23 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: EdgeInsets.all(responsive.spacing(8)),
                 decoration: BoxDecoration(
-                  color: Color(0xFF800000).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF800000), Color(0xFFB00000)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF800000).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Icon(
                   icon,
-                  color: Color(0xFF800000),
+                  color: Colors.white,
                   size: responsive.iconSize(20),
                 ),
               ),
@@ -387,13 +401,40 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFeaturedCourseCard(BuildContext context, Course course) {
+  // Get card gradient colors based on index and section type
+  List<Color> _getCardGradient(int index, bool isTopRated) {
+    if (isTopRated) {
+      // Gold-themed gradients for top rated
+      final goldGradients = [
+        [Color(0xFFD4AF37), Color(0xFFB8860B)], // Classic Gold
+        [Color(0xFF800000), Color(0xFFA00000)], // Maroon
+        [Color(0xFFCD853F), Color(0xFF8B4513)], // Peru Gold
+        [Color(0xFF800000), Color(0xFF600000)], // Dark Maroon
+        [Color(0xFFDAA520), Color(0xFFB8860B)], // Goldenrod
+      ];
+      return goldGradients[index % goldGradients.length];
+    } else {
+      // Teal-themed gradients for most reviewed
+      final tealGradients = [
+        [Color(0xFF008080), Color(0xFF006666)], // Classic Teal
+        [Color(0xFF800000), Color(0xFFA00000)], // Maroon
+        [Color(0xFF20B2AA), Color(0xFF008B8B)], // Light Sea Green
+        [Color(0xFF800000), Color(0xFF600000)], // Dark Maroon
+        [Color(0xFF5F9EA0), Color(0xFF2F4F4F)], // Cadet Blue
+      ];
+      return tealGradients[index % tealGradients.length];
+    }
+  }
+
+  Widget _buildFeaturedCourseCard(BuildContext context, Course course, int index, {bool isTopRated = true}) {
     final responsive = context.responsive;
+    final gradientColors = _getCardGradient(index, isTopRated);
+
     return Container(
       width: responsive.cardWidth,
       child: Card(
-        elevation: 2,
-        shadowColor: Colors.black12,
+        elevation: 3,
+        shadowColor: gradientColors[0].withValues(alpha: 0.4),
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
@@ -401,10 +442,7 @@ class _HomeScreenState extends State<HomeScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF800000),
-                Color(0xFFA00000),
-              ],
+              colors: gradientColors,
             ),
           ),
           child: Material(
