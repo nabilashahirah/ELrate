@@ -61,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Campus Hub"),
+        title: Text("ELRate"),
         elevation: 0,
       ),
       body: Consumer<CourseListViewModel>(
@@ -113,6 +113,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   onRefresh: () => viewModel.refreshCourses(),
                   child: CustomScrollView(
                     slivers: [
+                      // Intro Banner
+                      SliverToBoxAdapter(child: _buildIntroBanner(responsive)),
+
                       // Top Rated Section
                       SliverToBoxAdapter(
                         child: _buildSectionHeader(
@@ -190,6 +193,147 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
+    );
+  }
+
+  Widget _buildIntroBanner(Responsive responsive) {
+    return Container(
+      margin: EdgeInsets.fromLTRB(
+        responsive.spacing(20),
+        responsive.spacing(20),
+        responsive.spacing(20),
+        responsive.spacing(8),
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFF800000).withOpacity(0.25),
+            blurRadius: 15,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            // Background Gradient
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF800000),
+                      Color(0xFFA00000),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Decorative Elements
+            Positioned(
+              top: -40,
+              right: -40,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.05),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -20,
+              right: 40,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.05),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 40,
+              child: Icon(
+                Icons.school_outlined,
+                size: 100,
+                color: Colors.white.withOpacity(0.05),
+              ),
+            ),
+
+            // Content
+            Padding(
+              padding: EdgeInsets.all(responsive.spacing(24)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: responsive.spacing(12),
+                      vertical: responsive.spacing(6),
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.tips_and_updates_rounded,
+                          color: Colors.amber[300],
+                          size: responsive.iconSize(16),
+                        ),
+                        SizedBox(width: responsive.spacing(8)),
+                        Text(
+                          "Welcome to ELRate",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: responsive.sp(12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: responsive.spacing(16)),
+                  Text(
+                    "Plan Your Semester\nWith Confidence",
+                    style: TextStyle(
+                      fontSize: responsive.sp(24),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1.2,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  SizedBox(height: responsive.spacing(12)),
+                  Text(
+                    "Get insights on subjects you take, plan ahead for next semester, and help juniors by reviewing courses.",
+                    style: TextStyle(
+                      fontSize: responsive.sp(14),
+                      color: Colors.white.withOpacity(0.9),
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
