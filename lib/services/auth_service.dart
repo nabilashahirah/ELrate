@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io'; // For SocketException
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/auth_request.dart';
 import '../models/user.dart';
 import '../models/review.dart';
 import '../utils/security_helper.dart';
+import 'secure_storage_service.dart';
 
 class AuthService {
   // API Endpoints - Update these with your actual backend URLs
@@ -28,7 +28,7 @@ class AuthService {
   AuthService._internal();
 
   // Secure storage for sensitive data (Token)
-  final _secureStorage = const FlutterSecureStorage();
+  final _secureStorage = SecureStorageService();
 
   /// Login user
   Future<AuthResponse> login(LoginRequest request) async {
@@ -151,7 +151,7 @@ class AuthService {
   Future<void> _saveAuthData(AuthResponse authResponse) async {
     final prefs = await SharedPreferences.getInstance();
     // Save Token to Secure Storage
-    await _secureStorage.write(key: _tokenKey, value: authResponse.token);
+    await _secureStorage.write(_tokenKey, authResponse.token);
     // Save User Info to Shared Preferences (Non-sensitive)
     await prefs.setString(_userIdKey, authResponse.userId);
     await prefs.setString(_userNameKey, authResponse.name);
@@ -160,7 +160,7 @@ class AuthService {
 
   /// Get stored token
   Future<String?> getToken() async {
-    return await _secureStorage.read(key: _tokenKey);
+    return await _secureStorage.read(_tokenKey);
   }
 
   /// Get stored user data
@@ -306,7 +306,7 @@ class AuthService {
   /// Logout user
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await _secureStorage.delete(key: _tokenKey);
+    await _secureStorage.delete(_tokenKey);
     await prefs.remove(_userIdKey);
     await prefs.remove(_userNameKey);
     await prefs.remove(_userEmailKey);

@@ -6,6 +6,11 @@ class AppConstants {
   static const String getReviewsUrl = "https://getreviews-1089993125152.asia-southeast2.run.app";
   static const String getHarshWordsUrl = "https://getharshword-1089993125152.asia-southeast2.run.app";
 
+  // University & Course Management Endpoints
+  static const String getUniversitiesUrl = "https://getuniversities-1089993125152.asia-southeast2.run.app";
+  static const String addUniversityUrl = "https://adduniversity-1089993125152.asia-southeast2.run.app";
+  static const String addCourseUrl = "https://addcourse-1089993125152.asia-southeast2.run.app";
+
   // Colors
   static const int upmMaroon = 0xFF800000;
 

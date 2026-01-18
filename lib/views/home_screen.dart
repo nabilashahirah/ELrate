@@ -5,6 +5,7 @@ import '../models/course.dart';
 import '../models/review.dart';
 import '../utils/responsive.dart';
 import 'course_detail_screen.dart';
+import 'add_course_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -60,6 +61,20 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text("Campus Hub"),
         elevation: 0,
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddCourseScreen()),
+          );
+          if (result == true && context.mounted) {
+            context.read<CourseListViewModel>().refreshCourses();
+          }
+        },
+        backgroundColor: const Color(0xFF800000),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text("Add Course", style: TextStyle(color: Colors.white)),
       ),
       body: Consumer<CourseListViewModel>(
               builder: (context, viewModel, child) {

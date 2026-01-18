@@ -6,6 +6,8 @@ class Course {
   final String description;
   final double averageRating;
   final int totalReviews;
+  final String? universityId;
+  final String? universityName;
 
   Course({
     required this.id,
@@ -15,6 +17,8 @@ class Course {
     required this.description,
     required this.averageRating,
     required this.totalReviews,
+    this.universityId,
+    this.universityName,
   });
 
   // Factory constructor to create Course from JSON
@@ -23,10 +27,12 @@ class Course {
       id: json['id'] ?? '',
       name: json['name'] ?? '',
       faculty: json['faculty'] ?? '',
-      facultyShort: json['facultyShort'] ?? 'Gen',
+      facultyShort: json['facultyshort'] ?? json['facultyShort'] ?? 'Gen',
       description: json['description'] ?? '',
       averageRating: (json['averageRating'] ?? 0).toDouble(),
       totalReviews: json['totalReviews'] ?? 0,
+      universityId: json['universityId'],
+      universityName: json['universityName'],
     );
   }
 
@@ -40,6 +46,8 @@ class Course {
       'description': description,
       'averageRating': averageRating,
       'totalReviews': totalReviews,
+      if (universityId != null) 'universityId': universityId,
+      if (universityName != null) 'universityName': universityName,
     };
   }
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../../utils/responsive.dart';
-import 'login_screen.dart';
 import '../main_navigation.dart';
 
 class SignupScreen extends StatefulWidget {
