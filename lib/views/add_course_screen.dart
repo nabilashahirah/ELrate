@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/ai_service.dart';
 import '../viewmodels/add_course_viewmodel.dart';
 import '../viewmodels/course_list_viewmodel.dart';
 import '../models/university.dart';
@@ -155,6 +156,177 @@ class _AddCourseViewState extends State<_AddCourseView> {
       final viewModel = context.read<AddCourseViewModel>();
       await viewModel.fetchUniversities();
       viewModel.selectUniversity(result);
+    }
+  }
+
+  Future<void> _validateWithAi(BuildContext context) async {
+    final viewModel = context.read<AddCourseViewModel>();
+
+    if (viewModel.selectedUniversity == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please select a university first"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_courseIdController.text.trim().isEmpty || _nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter course code and name first"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final result = await viewModel.validateCourseWithAi(
+      courseCode: _courseIdController.text.trim(),
+      courseName: _nameController.text.trim(),
+      faculty: _facultyController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    _showAiValidationResult(context, result);
+  }
+
+  void _showAiValidationResult(BuildContext context, AiValidationResult result) {
+    final responsive = context.responsive;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              result.isValid ? Icons.check_circle : Icons.warning,
+              color: result.isValid ? Colors.green : Colors.orange,
+            ),
+            SizedBox(width: responsive.spacing(8)),
+            Text(result.isValid ? "Valid Course" : "Validation Warning"),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              result.reason,
+              style: TextStyle(fontSize: responsive.sp(14)),
+            ),
+            SizedBox(height: responsive.spacing(12)),
+            Container(
+              padding: EdgeInsets.all(responsive.spacing(8)),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    "Confidence: ",
+                    style: TextStyle(
+                      fontSize: responsive.sp(12),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: responsive.spacing(8),
+                      vertical: responsive.spacing(4),
+                    ),
+                    decoration: BoxDecoration(
+                      color: result.confidence == 'high'
+                          ? Colors.green
+                          : result.confidence == 'medium'
+                              ? Colors.orange
+                              : Colors.grey,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      result.confidence.toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: responsive.sp(10),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (result.suggestedName != null) ...[
+              SizedBox(height: responsive.spacing(12)),
+              Text(
+                "Suggested name: ${result.suggestedName}",
+                style: TextStyle(
+                  fontSize: responsive.sp(12),
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blue[700],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _generateDescription(BuildContext context) async {
+    final viewModel = context.read<AddCourseViewModel>();
+
+    if (viewModel.selectedUniversity == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please select a university first"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_courseIdController.text.trim().isEmpty || _nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter course code and name first"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final description = await viewModel.generateDescriptionWithAi(
+      courseCode: _courseIdController.text.trim(),
+      courseName: _nameController.text.trim(),
+      faculty: _facultyController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (description.isNotEmpty) {
+      _descriptionController.text = description;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Description generated successfully!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Could not generate description. Please try again."),
+          backgroundColor: Colors.orange,
+        ),
+      );
     }
   }
 
@@ -449,13 +621,156 @@ class _AddCourseViewState extends State<_AddCourseView> {
                   ),
                   SizedBox(height: responsive.spacing(20)),
 
-                  // Description
-                  Text(
-                    "Description",
-                    style: TextStyle(
-                      fontSize: responsive.sp(14),
-                      fontWeight: FontWeight.w600,
+                  // AI Validation Section
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(responsive.spacing(12)),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(responsive.spacing(12)),
+                      border: Border.all(color: Colors.blue[200]!),
                     ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.auto_awesome,
+                              color: Colors.blue[700],
+                              size: responsive.iconSize(20),
+                            ),
+                            SizedBox(width: responsive.spacing(8)),
+                            Text(
+                              "AI Assistant",
+                              style: TextStyle(
+                                fontSize: responsive.sp(14),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: responsive.spacing(8)),
+                        Text(
+                          "Validate course with AI before submitting (Required)",
+                          style: TextStyle(
+                            fontSize: responsive.sp(12),
+                            color: Colors.blue[600],
+                          ),
+                        ),
+                        SizedBox(height: responsive.spacing(12)),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: viewModel.isValidatingWithAi
+                                    ? null
+                                    : () => _validateWithAi(context),
+                                icon: viewModel.isValidatingWithAi
+                                    ? SizedBox(
+                                        width: responsive.spacing(16),
+                                        height: responsive.spacing(16),
+                                        child: const CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : Icon(Icons.verified, size: responsive.iconSize(18)),
+                                label: Text(
+                                  viewModel.isValidatingWithAi ? "Validating..." : "Validate Course",
+                                  style: TextStyle(fontSize: responsive.sp(12)),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.blue[700],
+                                  side: BorderSide(color: Colors.blue[300]!),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: responsive.spacing(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (viewModel.aiValidationResult != null) ...[
+                          SizedBox(height: responsive.spacing(8)),
+                          Container(
+                            padding: EdgeInsets.all(responsive.spacing(8)),
+                            decoration: BoxDecoration(
+                              color: viewModel.aiValidationResult!.isValid
+                                  ? Colors.green[50]
+                                  : Colors.orange[50],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  viewModel.aiValidationResult!.isValid
+                                      ? Icons.check_circle
+                                      : Icons.warning,
+                                  color: viewModel.aiValidationResult!.isValid
+                                      ? Colors.green
+                                      : Colors.orange,
+                                  size: responsive.iconSize(16),
+                                ),
+                                SizedBox(width: responsive.spacing(8)),
+                                Expanded(
+                                  child: Text(
+                                    viewModel.aiValidationResult!.reason.length > 100
+                                        ? '${viewModel.aiValidationResult!.reason.substring(0, 100)}...'
+                                        : viewModel.aiValidationResult!.reason,
+                                    style: TextStyle(
+                                      fontSize: responsive.sp(11),
+                                      color: viewModel.aiValidationResult!.isValid
+                                          ? Colors.green[700]
+                                          : Colors.orange[700],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: responsive.spacing(20)),
+
+                  // Description
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Description",
+                        style: TextStyle(
+                          fontSize: responsive.sp(14),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: (viewModel.isGeneratingDescription || !viewModel.isAiValidated)
+                            ? null
+                            : () => _generateDescription(context),
+                        icon: viewModel.isGeneratingDescription
+                            ? SizedBox(
+                                width: responsive.spacing(14),
+                                height: responsive.spacing(14),
+                                child: const CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Icon(Icons.auto_awesome, size: responsive.iconSize(16)),
+                        label: Text(
+                          viewModel.isGeneratingDescription
+                              ? "Generating..."
+                              : viewModel.isAiValidated
+                                  ? "AI Generate"
+                                  : "Validate First",
+                          style: TextStyle(fontSize: responsive.sp(12)),
+                        ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: viewModel.isAiValidated ? Colors.blue[700] : Colors.grey,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: responsive.spacing(8),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: responsive.spacing(8)),
                   TextFormField(
@@ -463,7 +778,7 @@ class _AddCourseViewState extends State<_AddCourseView> {
                     maxLines: 4,
                     maxLength: 500,
                     decoration: InputDecoration(
-                      hintText: "Brief description of the course content...",
+                      hintText: "Brief description of the course content... (Use AI Generate to auto-fill)",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(responsive.spacing(12)),
                       ),
@@ -480,14 +795,18 @@ class _AddCourseViewState extends State<_AddCourseView> {
                     height: responsive.buttonHeight,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF800000),
+                        backgroundColor: viewModel.canSubmit
+                            ? const Color(0xFF800000)
+                            : Colors.grey,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(responsive.spacing(12)),
                         ),
-                        elevation: 2,
+                        elevation: viewModel.canSubmit ? 2 : 0,
                       ),
-                      onPressed: viewModel.isLoading ? null : () => _submitCourse(context),
+                      onPressed: (viewModel.isLoading || !viewModel.canSubmit)
+                          ? null
+                          : () => _submitCourse(context),
                       child: viewModel.isLoading
                           ? SizedBox(
                               height: responsive.spacing(24),
@@ -498,7 +817,9 @@ class _AddCourseViewState extends State<_AddCourseView> {
                               ),
                             )
                           : Text(
-                              "Add Course",
+                              viewModel.canSubmit
+                                  ? "Add Course"
+                                  : "Validate with AI First",
                               style: TextStyle(
                                 fontSize: responsive.sp(16),
                                 fontWeight: FontWeight.bold,

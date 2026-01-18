@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/ai_service.dart';
 import '../viewmodels/add_university_viewmodel.dart';
 import '../utils/responsive.dart';
 
@@ -64,6 +65,123 @@ class _AddUniversityViewState extends State<_AddUniversityView> {
         ),
       );
     }
+  }
+
+  Future<void> _validateWithAi(BuildContext context) async {
+    final viewModel = context.read<AddUniversityViewModel>();
+
+    if (_nameController.text.trim().isEmpty || _shortNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter university name and short name first"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final result = await viewModel.validateUniversityWithAi(
+      name: _nameController.text.trim(),
+      shortName: _shortNameController.text.trim(),
+      country: _countryController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    _showAiValidationResult(context, result);
+  }
+
+  void _showAiValidationResult(BuildContext context, AiValidationResult result) {
+    final responsive = context.responsive;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              result.isValid ? Icons.check_circle : Icons.warning,
+              color: result.isValid ? Colors.green : Colors.orange,
+            ),
+            SizedBox(width: responsive.spacing(8)),
+            Expanded(
+              child: Text(
+                result.isValid ? "Valid University" : "Validation Warning",
+                style: TextStyle(fontSize: responsive.sp(16)),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              result.reason,
+              style: TextStyle(fontSize: responsive.sp(14)),
+            ),
+            SizedBox(height: responsive.spacing(12)),
+            Container(
+              padding: EdgeInsets.all(responsive.spacing(8)),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    "Confidence: ",
+                    style: TextStyle(
+                      fontSize: responsive.sp(12),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: responsive.spacing(8),
+                      vertical: responsive.spacing(4),
+                    ),
+                    decoration: BoxDecoration(
+                      color: result.confidence == 'high'
+                          ? Colors.green
+                          : result.confidence == 'medium'
+                              ? Colors.orange
+                              : Colors.grey,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      result.confidence.toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: responsive.sp(10),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (result.suggestedName != null) ...[
+              SizedBox(height: responsive.spacing(12)),
+              Text(
+                "Suggested name: ${result.suggestedName}",
+                style: TextStyle(
+                  fontSize: responsive.sp(12),
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blue[700],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -218,7 +336,119 @@ class _AddUniversityViewState extends State<_AddUniversityView> {
                       return null;
                     },
                   ),
-                  SizedBox(height: responsive.spacing(32)),
+                  SizedBox(height: responsive.spacing(20)),
+
+                  // AI Validation Section
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(responsive.spacing(12)),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(responsive.spacing(12)),
+                      border: Border.all(color: Colors.blue[200]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.auto_awesome,
+                              color: Colors.blue[700],
+                              size: responsive.iconSize(20),
+                            ),
+                            SizedBox(width: responsive.spacing(8)),
+                            Text(
+                              "AI Assistant",
+                              style: TextStyle(
+                                fontSize: responsive.sp(14),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: responsive.spacing(8)),
+                        Text(
+                          "Verify with AI before submitting (Required)",
+                          style: TextStyle(
+                            fontSize: responsive.sp(12),
+                            color: Colors.blue[600],
+                          ),
+                        ),
+                        SizedBox(height: responsive.spacing(12)),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: viewModel.isValidatingWithAi
+                                    ? null
+                                    : () => _validateWithAi(context),
+                                icon: viewModel.isValidatingWithAi
+                                    ? SizedBox(
+                                        width: responsive.spacing(16),
+                                        height: responsive.spacing(16),
+                                        child: const CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : Icon(Icons.verified, size: responsive.iconSize(18)),
+                                label: Text(
+                                  viewModel.isValidatingWithAi ? "Validating..." : "Validate University",
+                                  style: TextStyle(fontSize: responsive.sp(12)),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.blue[700],
+                                  side: BorderSide(color: Colors.blue[300]!),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: responsive.spacing(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (viewModel.aiValidationResult != null) ...[
+                          SizedBox(height: responsive.spacing(8)),
+                          Container(
+                            padding: EdgeInsets.all(responsive.spacing(8)),
+                            decoration: BoxDecoration(
+                              color: viewModel.aiValidationResult!.isValid
+                                  ? Colors.green[50]
+                                  : Colors.orange[50],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  viewModel.aiValidationResult!.isValid
+                                      ? Icons.check_circle
+                                      : Icons.warning,
+                                  color: viewModel.aiValidationResult!.isValid
+                                      ? Colors.green
+                                      : Colors.orange,
+                                  size: responsive.iconSize(16),
+                                ),
+                                SizedBox(width: responsive.spacing(8)),
+                                Expanded(
+                                  child: Text(
+                                    viewModel.aiValidationResult!.reason.length > 100
+                                        ? '${viewModel.aiValidationResult!.reason.substring(0, 100)}...'
+                                        : viewModel.aiValidationResult!.reason,
+                                    style: TextStyle(
+                                      fontSize: responsive.sp(11),
+                                      color: viewModel.aiValidationResult!.isValid
+                                          ? Colors.green[700]
+                                          : Colors.orange[700],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: responsive.spacing(24)),
 
                   // Submit Button
                   SizedBox(
@@ -226,14 +456,18 @@ class _AddUniversityViewState extends State<_AddUniversityView> {
                     height: responsive.buttonHeight,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF800000),
+                        backgroundColor: viewModel.canSubmit
+                            ? const Color(0xFF800000)
+                            : Colors.grey,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(responsive.spacing(12)),
                         ),
-                        elevation: 2,
+                        elevation: viewModel.canSubmit ? 2 : 0,
                       ),
-                      onPressed: viewModel.isLoading ? null : () => _submitUniversity(context),
+                      onPressed: (viewModel.isLoading || !viewModel.canSubmit)
+                          ? null
+                          : () => _submitUniversity(context),
                       child: viewModel.isLoading
                           ? SizedBox(
                               height: responsive.spacing(24),
@@ -244,7 +478,9 @@ class _AddUniversityViewState extends State<_AddUniversityView> {
                               ),
                             )
                           : Text(
-                              "Add University",
+                              viewModel.canSubmit
+                                  ? "Add University"
+                                  : "Validate with AI First",
                               style: TextStyle(
                                 fontSize: responsive.sp(16),
                                 fontWeight: FontWeight.bold,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/university.dart';
+import '../services/ai_service.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../utils/security_helper.dart';
@@ -7,19 +8,34 @@ import '../utils/security_helper.dart';
 class AddCourseViewModel extends ChangeNotifier {
   final ApiService _apiService = ApiService();
   final AuthService _authService = AuthService();
+  final AiService _aiService = AiService();
 
   List<University> _universities = [];
   University? _selectedUniversity;
   bool _isLoading = false;
   bool _isLoadingUniversities = false;
+  bool _isValidatingWithAi = false;
+  bool _isGeneratingDescription = false;
   String? _errorMessage;
+  AiValidationResult? _aiValidationResult;
+  String? _generatedDescription;
 
   // Getters
   List<University> get universities => _universities;
   University? get selectedUniversity => _selectedUniversity;
   bool get isLoading => _isLoading;
   bool get isLoadingUniversities => _isLoadingUniversities;
+  bool get isValidatingWithAi => _isValidatingWithAi;
+  bool get isGeneratingDescription => _isGeneratingDescription;
   String? get errorMessage => _errorMessage;
+  AiValidationResult? get aiValidationResult => _aiValidationResult;
+  String? get generatedDescription => _generatedDescription;
+
+  /// Check if AI validation has been completed and passed
+  bool get isAiValidated => _aiValidationResult != null && _aiValidationResult!.isValid;
+
+  /// Check if can submit (AI validation passed)
+  bool get canSubmit => isAiValidated;
 
   AddCourseViewModel() {
     fetchUniversities();
@@ -48,6 +64,92 @@ class AddCourseViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Clear AI validation result
+  void clearAiValidation() {
+    _aiValidationResult = null;
+    notifyListeners();
+  }
+
+  /// Clear generated description
+  void clearGeneratedDescription() {
+    _generatedDescription = null;
+    notifyListeners();
+  }
+
+  /// Validate course with AI
+  Future<AiValidationResult> validateCourseWithAi({
+    required String courseCode,
+    required String courseName,
+    required String faculty,
+  }) async {
+    if (_selectedUniversity == null) {
+      return AiValidationResult(
+        isValid: false,
+        confidence: 'high',
+        reason: 'Please select a university first.',
+      );
+    }
+
+    _isValidatingWithAi = true;
+    _aiValidationResult = null;
+    notifyListeners();
+
+    try {
+      _aiValidationResult = await _aiService.validateCourse(
+        courseCode: courseCode,
+        courseName: courseName,
+        faculty: faculty,
+        universityName: _selectedUniversity!.name,
+      );
+
+      _isValidatingWithAi = false;
+      notifyListeners();
+      return _aiValidationResult!;
+    } catch (e) {
+      _isValidatingWithAi = false;
+      _aiValidationResult = AiValidationResult(
+        isValid: false,
+        confidence: 'unknown',
+        reason: 'Could not validate course. Please try again.',
+      );
+      notifyListeners();
+      return _aiValidationResult!;
+    }
+  }
+
+  /// Generate course description with AI
+  Future<String> generateDescriptionWithAi({
+    required String courseCode,
+    required String courseName,
+    required String faculty,
+  }) async {
+    if (_selectedUniversity == null) {
+      return '';
+    }
+
+    _isGeneratingDescription = true;
+    _generatedDescription = null;
+    notifyListeners();
+
+    try {
+      _generatedDescription = await _aiService.generateCourseDescription(
+        courseCode: courseCode,
+        courseName: courseName,
+        faculty: faculty,
+        universityName: _selectedUniversity!.name,
+      );
+
+      _isGeneratingDescription = false;
+      notifyListeners();
+      return _generatedDescription ?? '';
+    } catch (e) {
+      _isGeneratingDescription = false;
+      _generatedDescription = null;
+      notifyListeners();
+      return '';
+    }
+  }
+
   /// Submit new course
   Future<bool> submitCourse({
     required String courseId,
@@ -59,6 +161,13 @@ class AddCourseViewModel extends ChangeNotifier {
     // Rate limiting
     if (!SecurityHelper.canAttemptAction('add_course', cooldownSeconds: 5)) {
       _errorMessage = 'Too many attempts. Please wait a moment.';
+      notifyListeners();
+      return false;
+    }
+
+    // Require AI validation first
+    if (!isAiValidated) {
+      _errorMessage = 'Please validate the course with AI first';
       notifyListeners();
       return false;
     }

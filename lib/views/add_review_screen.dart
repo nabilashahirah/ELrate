@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/ai_service.dart';
 import '../viewmodels/add_review_viewmodel.dart';
-import '../services/api_service.dart';
 import '../utils/responsive.dart';
 
 class AddReviewScreen extends StatelessWidget {
@@ -29,34 +29,6 @@ class _AddReviewView extends StatefulWidget {
 
 class _AddReviewViewState extends State<_AddReviewView> {
   final TextEditingController _commentController = TextEditingController();
-  List<String> _harshWords = []; // Will be fetched from backend
-  bool _harshWordsLoaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchHarshWords();
-  }
-
-  Future<void> _fetchHarshWords() async {
-    try {
-      final words = await ApiService().getHarshWords();
-      if (mounted) {
-        setState(() {
-          _harshWords = words;
-          _harshWordsLoaded = true;
-        });
-      }
-    } catch (_) {
-      // Mark as loaded even if fetch fails
-      // Backend will still validate on submission
-      if (mounted) {
-        setState(() {
-          _harshWordsLoaded = true;
-        });
-      }
-    }
-  }
 
   @override
   void dispose() {
@@ -64,51 +36,132 @@ class _AddReviewViewState extends State<_AddReviewView> {
     super.dispose();
   }
 
-  bool _containsHarshWords(String text) {
-    // Only validate if harsh words list was successfully loaded
-    if (_harshWords.isEmpty) {
-      // Skip client-side check if list not loaded
-      // Backend will still validate on submission
-      return false;
-    }
-
-    final lowerText = text.toLowerCase();
-    for (final word in _harshWords) {
-      // Check if the word appears in the text (with word boundaries)
-      // Also check for variations like "fuckk" → check if text contains the base word
-      final escapedWord = RegExp.escape(word);
-
-      // Pattern 1: Exact word match with boundaries
-      if (RegExp(r'\b' + escapedWord + r'\b', caseSensitive: false).hasMatch(lowerText)) {
-        return true;
-      }
-
-      // Pattern 2: Repeated letters (e.g., "fuckk", "shiiit")
-      if (RegExp(r'\b' + escapedWord + r'+', caseSensitive: false).hasMatch(lowerText)) {
-        return true;
-      }
-
-      // Pattern 3: Word with extra characters (e.g., "f*ck", "sh!t")
-      if (lowerText.contains(word)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  Future<void> _submitReview(BuildContext context) async {
-    // Client-side harsh word check (if list was fetched)
-    if (_containsHarshWords(_commentController.text)) {
+  Future<void> _checkContentWithAi(BuildContext context) async {
+    final comment = _commentController.text.trim();
+    if (comment.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Please keep reviews professional. Harsh language is not allowed."),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
+        const SnackBar(
+          content: Text("Please enter a review first"),
+          backgroundColor: Colors.orange,
         ),
       );
       return;
     }
 
+    final viewModel = context.read<AddReviewViewModel>();
+    final result = await viewModel.checkContentWithAi(comment);
+
+    if (!mounted) return;
+
+    _showModerationResult(context, result);
+  }
+
+  void _showModerationResult(BuildContext context, ContentModerationResult result) {
+    final responsive = context.responsive;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              result.isAppropriate ? Icons.check_circle : Icons.warning,
+              color: result.isAppropriate ? Colors.green : Colors.red,
+            ),
+            SizedBox(width: responsive.spacing(8)),
+            Expanded(
+              child: Text(
+                result.isAppropriate ? "Content OK" : "Content Warning",
+                style: TextStyle(fontSize: responsive.sp(16)),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              result.reason,
+              style: TextStyle(fontSize: responsive.sp(14)),
+            ),
+            if (result.hasFlaggedWords) ...[
+              SizedBox(height: responsive.spacing(12)),
+              Container(
+                padding: EdgeInsets.all(responsive.spacing(8)),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Flagged words:",
+                      style: TextStyle(
+                        fontSize: responsive.sp(12),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[700],
+                      ),
+                    ),
+                    SizedBox(height: responsive.spacing(4)),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: result.flaggedWords.map((word) => Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: responsive.spacing(8),
+                          vertical: responsive.spacing(2),
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red[100],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          word,
+                          style: TextStyle(
+                            fontSize: responsive.sp(11),
+                            color: Colors.red[800],
+                          ),
+                        ),
+                      )).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            if (result.suggestion != null) ...[
+              SizedBox(height: responsive.spacing(12)),
+              Text(
+                "Suggestion:",
+                style: TextStyle(
+                  fontSize: responsive.sp(12),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: responsive.spacing(4)),
+              Text(
+                result.suggestion!,
+                style: TextStyle(
+                  fontSize: responsive.sp(12),
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blue[700],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitReview(BuildContext context) async {
     final viewModel = context.read<AddReviewViewModel>();
     final success = await viewModel.submitReview(_commentController.text);
 
@@ -117,15 +170,20 @@ class _AddReviewViewState extends State<_AddReviewView> {
     if (success) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Review Posted!")),
+        const SnackBar(content: Text("Review Posted!")),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(viewModel.errorMessage ?? "Connection Error"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      // Show moderation warning if content was flagged
+      if (viewModel.moderationResult != null && !viewModel.moderationResult!.isAppropriate) {
+        _showModerationResult(context, viewModel.moderationResult!);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(viewModel.errorMessage ?? "Connection Error"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -212,9 +270,42 @@ class _AddReviewViewState extends State<_AddReviewView> {
                   SizedBox(height: responsive.spacing(32)),
 
                   // Comment Section
-                  Text(
-                    "Review",
-                    style: TextStyle(fontSize: responsive.sp(16), fontWeight: FontWeight.w600),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Review",
+                        style: TextStyle(fontSize: responsive.sp(16), fontWeight: FontWeight.w600),
+                      ),
+                      TextButton.icon(
+                        onPressed: viewModel.isCheckingContent
+                            ? null
+                            : () => _checkContentWithAi(context),
+                        icon: viewModel.isCheckingContent
+                            ? SizedBox(
+                                width: responsive.spacing(14),
+                                height: responsive.spacing(14),
+                                child: const CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : viewModel.isContentChecked
+                                ? Icon(Icons.check_circle, size: responsive.iconSize(16), color: Colors.green)
+                                : Icon(Icons.shield_outlined, size: responsive.iconSize(16)),
+                        label: Text(
+                          viewModel.isCheckingContent
+                              ? "Checking..."
+                              : viewModel.isContentChecked
+                                  ? "Content OK"
+                                  : "Check Content *",
+                          style: TextStyle(fontSize: responsive.sp(12)),
+                        ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: viewModel.isContentChecked ? Colors.green : Colors.blue[700],
+                          padding: EdgeInsets.symmetric(
+                            horizontal: responsive.spacing(8),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: responsive.spacing(8)),
                   TextField(
@@ -232,7 +323,35 @@ class _AddReviewViewState extends State<_AddReviewView> {
                     ),
                     style: TextStyle(fontSize: responsive.sp(14)),
                   ),
-                  SizedBox(height: responsive.spacing(24)),
+                  // AI moderation warning display
+                  if (viewModel.moderationResult != null && !viewModel.moderationResult!.isAppropriate)
+                    Container(
+                      margin: EdgeInsets.only(bottom: responsive.spacing(8)),
+                      padding: EdgeInsets.all(responsive.spacing(12)),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(responsive.spacing(8)),
+                        border: Border.all(color: Colors.red[200]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.red, size: responsive.iconSize(20)),
+                          SizedBox(width: responsive.spacing(8)),
+                          Expanded(
+                            child: Text(
+                              viewModel.moderationResult!.hasFlaggedWords
+                                  ? 'Contains inappropriate words: ${viewModel.moderationResult!.flaggedWords.join(", ")}'
+                                  : viewModel.moderationResult!.reason,
+                              style: TextStyle(
+                                fontSize: responsive.sp(12),
+                                color: Colors.red[700],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  SizedBox(height: responsive.spacing(16)),
 
                   // Options Section
                   Container(
@@ -269,17 +388,26 @@ class _AddReviewViewState extends State<_AddReviewView> {
                     height: responsive.buttonHeight,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF800000),
+                        backgroundColor: viewModel.canSubmit
+                            ? const Color(0xFF800000)
+                            : Colors.grey,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(responsive.spacing(12)),
                         ),
-                        elevation: 2,
+                        elevation: viewModel.canSubmit ? 2 : 0,
                       ),
-                      onPressed: viewModel.isLoading ? null : () => _submitReview(context),
+                      onPressed: (viewModel.isLoading || !viewModel.canSubmit)
+                          ? null
+                          : () => _submitReview(context),
                       child: viewModel.isLoading
-                          ? SizedBox(height: responsive.spacing(24), width: responsive.spacing(24), child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : Text("Submit Review", style: TextStyle(fontSize: responsive.sp(16), fontWeight: FontWeight.bold)),
+                          ? SizedBox(height: responsive.spacing(24), width: responsive.spacing(24), child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Text(
+                              viewModel.canSubmit
+                                  ? "Submit Review"
+                                  : "Check Content First",
+                              style: TextStyle(fontSize: responsive.sp(16), fontWeight: FontWeight.bold),
+                            ),
                     ),
                   ),
                 ],
