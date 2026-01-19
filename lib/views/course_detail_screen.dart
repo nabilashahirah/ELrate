@@ -5,6 +5,7 @@ import '../models/review.dart';
 import '../viewmodels/course_detail_viewmodel.dart';
 import 'add_review_screen.dart';
 import '../utils/responsive.dart';
+import '../utils/university_assets.dart';
 
 class CourseDetailScreen extends StatelessWidget {
   final Course course;
@@ -125,70 +126,91 @@ class _CourseDetailView extends StatelessWidget {
 
   Widget _buildSliverAppBar(BuildContext context) {
     final responsive = context.responsive;
+    final universityColors = UniversityAssets.getColors(course.universityId);
+
     return SliverAppBar(
-      expandedHeight: responsive.spacing(150.0),
+      expandedHeight: responsive.spacing(200.0),
       pinned: true,
-      backgroundColor: Color(0xFF800000),
+      backgroundColor: universityColors[0],
       foregroundColor: Colors.white,
       title: Text(course.id),
       centerTitle: true,
       flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF800000), Color(0xFF500000)],
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Full Background University Image with dark overlay
+            UniversityAssets.buildDetailBackground(
+              universityId: course.universityId,
+              universityName: course.universityName,
             ),
-          ),
-          padding: EdgeInsets.fromLTRB(responsive.spacing(20), 0, responsive.spacing(20), responsive.spacing(16)),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+            // Content
+            Positioned(
+              left: responsive.spacing(20),
+              right: responsive.spacing(20),
+              bottom: responsive.spacing(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: responsive.spacing(10), vertical: responsive.spacing(5)),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(responsive.spacing(20)),
-                    ),
-                    child: Text(
-                      course.faculty,
-                      style: TextStyle(color: Colors.white, fontSize: responsive.sp(12), fontWeight: FontWeight.w500),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  // Tags row
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: responsive.spacing(12), vertical: responsive.spacing(6)),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.95),
+                          borderRadius: BorderRadius.circular(responsive.spacing(20)),
+                        ),
+                        child: Text(
+                          course.faculty,
+                          style: TextStyle(
+                            color: universityColors[0],
+                            fontSize: responsive.sp(11),
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      SizedBox(width: responsive.spacing(8)),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: responsive.spacing(12), vertical: responsive.spacing(6)),
+                        decoration: BoxDecoration(
+                          color: universityColors[0],
+                          borderRadius: BorderRadius.circular(responsive.spacing(20)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
+                        ),
+                        child: Text(
+                          course.universityId ?? 'UPM',
+                          style: TextStyle(color: Colors.white, fontSize: responsive.sp(11), fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: responsive.spacing(8)),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: responsive.spacing(10), vertical: responsive.spacing(5)),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(responsive.spacing(20)),
+                  SizedBox(height: responsive.spacing(12)),
+                  // Course name with shadow
+                  Text(
+                    course.name,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: responsive.sp(20),
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 8,
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      course.universityId ?? 'UPM',
-                      style: TextStyle(color: Colors.white, fontSize: responsive.sp(12), fontWeight: FontWeight.bold),
-                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
-              SizedBox(height: responsive.spacing(8)),
-              Text(
-                course.name,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: responsive.sp(18),
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -202,7 +224,7 @@ class _CourseDetailView extends StatelessWidget {
         borderRadius: BorderRadius.circular(responsive.spacing(16)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha:0.05),
             blurRadius: responsive.spacing(10),
             offset: Offset(0, responsive.spacing(4)),
           ),
@@ -351,7 +373,7 @@ class _CourseDetailView extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha:0.02),
             blurRadius: responsive.spacing(8),
             offset: Offset(0, responsive.spacing(2)),
           ),
@@ -365,7 +387,7 @@ class _CourseDetailView extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: responsive.spacing(16),
-                backgroundColor: Color(0xFF800000).withOpacity(0.1),
+                backgroundColor: Color(0xFF800000).withValues(alpha:0.1),
                 child: Text(
                   review.studentName.isNotEmpty ? review.studentName[0].toUpperCase() : 'A',
                   style: TextStyle(color: Color(0xFF800000), fontWeight: FontWeight.bold, fontSize: responsive.sp(14)),
@@ -391,7 +413,7 @@ class _CourseDetailView extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: responsive.spacing(8), vertical: responsive.spacing(4)),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.1),
+                  color: Colors.amber.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(responsive.spacing(8)),
                 ),
                 child: Row(
@@ -412,9 +434,9 @@ class _CourseDetailView extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: responsive.spacing(10), vertical: responsive.spacing(6)),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.05),
+                color: Colors.green.withValues(alpha:0.05),
                 borderRadius: BorderRadius.circular(responsive.spacing(8)),
-                border: Border.all(color: Colors.green.withOpacity(0.2)),
+                border: Border.all(color: Colors.green.withValues(alpha:0.2)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

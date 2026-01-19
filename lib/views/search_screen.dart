@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/search_viewmodel.dart';
 import '../utils/responsive.dart';
+import '../utils/university_assets.dart';
 import '../models/course.dart';
 import 'course_detail_screen.dart';
 import 'add_course_screen.dart';
@@ -399,7 +400,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
+                  color: Colors.black.withValues(alpha: 0.15),
                   blurRadius: 12,
                   offset: Offset(0, 4),
                 ),
@@ -478,7 +479,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withValues(alpha: 0.06),
                 blurRadius: 12,
                 offset: Offset(0, 4),
               ),
@@ -500,7 +501,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                       Container(
                         padding: EdgeInsets.all(responsive.spacing(8)),
                         decoration: BoxDecoration(
-                          color: Color(0xFF800000).withOpacity(0.1),
+                          color: Color(0xFF800000).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -645,7 +646,7 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
                                 activeTrackColor: Color(0xFF800000),
                                 inactiveTrackColor: Colors.grey[300],
                                 thumbColor: Color(0xFF800000),
-                                overlayColor: Color(0xFF800000).withOpacity(0.2),
+                                overlayColor: Color(0xFF800000).withValues(alpha: 0.2),
                                 trackHeight: 4,
                                 thumbShape: RoundSliderThumbShape(enabledThumbRadius: 8),
                               ),
@@ -771,15 +772,9 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     final responsive = context.responsive;
     final cardIconSize = responsive.isMobile ? 52.0 : 62.0;
 
-    // Generate a color based on faculty for variety
-    final facultyColors = {
-      'FSKTM': Color(0xFF1565C0),
-      'FEM': Color(0xFF2E7D32),
-      'FK': Color(0xFFE65100),
-      'FPP': Color(0xFF6A1B9A),
-      'FS': Color(0xFF00838F),
-    };
-    final cardColor = facultyColors[course.facultyShort] ?? Color(0xFF800000);
+    // Use university colors for consistency
+    final universityColors = UniversityAssets.getColors(course.universityId);
+    final primaryColor = universityColors[0];
 
     return Container(
       decoration: BoxDecoration(
@@ -787,175 +782,190 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: primaryColor.withValues(alpha: 0.15),
             blurRadius: 12,
             offset: Offset(0, 4),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CourseDetailScreen(course: course),
-              ),
-            );
-            if (context.mounted) {
-              context.read<SearchViewModel>().refresh();
-            }
-          },
-          child: Padding(
-            padding: EdgeInsets.all(responsive.spacing(16)),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Course Icon with gradient
-                Container(
-                  width: cardIconSize,
-                  height: cardIconSize,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [cardColor, cardColor.withValues(alpha: 0.7)],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: cardColor.withValues(alpha: 0.35),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          // Full Background University Image or Beautiful Gradient
+          Positioned.fill(
+            child: UniversityAssets.buildCardBackground(
+              universityId: course.universityId,
+              universityName: course.universityName,
+              imageOpacity: 0.15,
+              showOverlay: true,
+            ),
+          ),
+          // Card Content
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CourseDetailScreen(course: course),
                   ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    course.id.substring(0, min(3, course.id.length)).toUpperCase(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: responsive.sp(13),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-                SizedBox(width: responsive.spacing(14)),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Course Code
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: responsive.spacing(8),
-                          vertical: responsive.spacing(3),
+                );
+                if (context.mounted) {
+                  context.read<SearchViewModel>().refresh();
+                }
+              },
+              child: Padding(
+                padding: EdgeInsets.all(responsive.spacing(16)),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Course Icon with university colors
+                    Container(
+                      width: cardIconSize,
+                      height: cardIconSize,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: universityColors,
                         ),
-                        decoration: BoxDecoration(
-                          color: cardColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          course.id,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: cardColor,
-                            fontSize: responsive.sp(11),
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: responsive.spacing(6)),
-                      // Course Name
-                      Text(
-                        course.name,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: responsive.sp(15),
-                          height: 1.25,
-                          color: Colors.grey[850],
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: responsive.spacing(10)),
-                      // Tags and Rating Row
-                      Row(
-                        children: [
-                          // Faculty Tag
-                          _buildTag(
-                            label: course.facultyShort,
-                            backgroundColor: Colors.grey[100]!,
-                            textColor: Colors.grey[700]!,
-                            responsive: responsive,
-                          ),
-                          SizedBox(width: responsive.spacing(6)),
-                          // University Tag
-                          _buildTag(
-                            label: course.universityId ?? 'UPM',
-                            backgroundColor: Color(0xFF800000),
-                            textColor: Colors.white,
-                            responsive: responsive,
-                          ),
-                          Spacer(),
-                          // Rating
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: responsive.spacing(8),
-                              vertical: responsive.spacing(4),
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.star_rounded,
-                                  size: responsive.iconSize(14),
-                                  color: Colors.amber[700],
-                                ),
-                                SizedBox(width: responsive.spacing(3)),
-                                Text(
-                                  course.averageRating.toStringAsFixed(1),
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: responsive.sp(12),
-                                    color: Colors.amber[800],
-                                  ),
-                                ),
-                                Text(
-                                  " (${course.totalReviews})",
-                                  style: TextStyle(
-                                    color: Colors.grey[500],
-                                    fontSize: responsive.sp(11),
-                                  ),
-                                ),
-                              ],
-                            ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor.withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        course.id.substring(0, min(3, course.id.length)).toUpperCase(),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: responsive.sp(13),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: responsive.spacing(14)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Course Code with university color
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: responsive.spacing(8),
+                              vertical: responsive.spacing(3),
+                            ),
+                            decoration: BoxDecoration(
+                              color: primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              course.id,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: primaryColor,
+                                fontSize: responsive.sp(11),
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: responsive.spacing(6)),
+                          // Course Name
+                          Text(
+                            course.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: responsive.sp(15),
+                              height: 1.25,
+                              color: Colors.grey[850],
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: responsive.spacing(10)),
+                          // Tags and Rating Row
+                          Row(
+                            children: [
+                              // Faculty Tag
+                              _buildTag(
+                                label: course.facultyShort,
+                                backgroundColor: Colors.grey[100]!,
+                                textColor: Colors.grey[700]!,
+                                responsive: responsive,
+                              ),
+                              SizedBox(width: responsive.spacing(6)),
+                              // University Tag with university color
+                              _buildTag(
+                                label: course.universityId ?? 'UPM',
+                                backgroundColor: primaryColor,
+                                textColor: Colors.white,
+                                responsive: responsive,
+                              ),
+                              Spacer(),
+                              // Rating
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: responsive.spacing(8),
+                                  vertical: responsive.spacing(4),
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.star_rounded,
+                                      size: responsive.iconSize(14),
+                                      color: Colors.amber[700],
+                                    ),
+                                    SizedBox(width: responsive.spacing(3)),
+                                    Text(
+                                      course.averageRating.toStringAsFixed(1),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: responsive.sp(12),
+                                        color: Colors.amber[800],
+                                      ),
+                                    ),
+                                    Text(
+                                      " (${course.totalReviews})",
+                                      style: TextStyle(
+                                        color: Colors.grey[500],
+                                        fontSize: responsive.sp(11),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Arrow indicator
+                    Padding(
+                      padding: EdgeInsets.only(left: responsive.spacing(8)),
+                      child: Icon(
+                        Icons.chevron_right_rounded,
+                        color: Colors.grey[300],
+                        size: responsive.iconSize(24),
+                      ),
+                    ),
+                  ],
                 ),
-                // Arrow indicator
-                Padding(
-                  padding: EdgeInsets.only(left: responsive.spacing(8)),
-                  child: Icon(
-                    Icons.chevron_right_rounded,
-                    color: Colors.grey[300],
-                    size: responsive.iconSize(24),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

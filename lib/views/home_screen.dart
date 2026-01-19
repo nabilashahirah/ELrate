@@ -4,8 +4,8 @@ import '../viewmodels/course_list_viewmodel.dart';
 import '../models/course.dart';
 import '../models/review.dart';
 import '../utils/responsive.dart';
+import '../utils/university_assets.dart';
 import 'course_detail_screen.dart';
-import 'add_course_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onSeeAll;
@@ -401,166 +401,198 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Get card gradient colors based on index and section type
-  List<Color> _getCardGradient(int index, bool isTopRated) {
-    if (isTopRated) {
-      // Gold-themed gradients for top rated
-      final goldGradients = [
-        [Color(0xFFD4AF37), Color(0xFFB8860B)], // Classic Gold
-        [Color(0xFF800000), Color(0xFFA00000)], // Maroon
-        [Color(0xFFCD853F), Color(0xFF8B4513)], // Peru Gold
-        [Color(0xFF800000), Color(0xFF600000)], // Dark Maroon
-        [Color(0xFFDAA520), Color(0xFFB8860B)], // Goldenrod
-      ];
-      return goldGradients[index % goldGradients.length];
-    } else {
-      // Teal-themed gradients for most reviewed
-      final tealGradients = [
-        [Color(0xFF008080), Color(0xFF006666)], // Classic Teal
-        [Color(0xFF800000), Color(0xFFA00000)], // Maroon
-        [Color(0xFF20B2AA), Color(0xFF008B8B)], // Light Sea Green
-        [Color(0xFF800000), Color(0xFF600000)], // Dark Maroon
-        [Color(0xFF5F9EA0), Color(0xFF2F4F4F)], // Cadet Blue
-      ];
-      return tealGradients[index % tealGradients.length];
-    }
-  }
-
   Widget _buildFeaturedCourseCard(BuildContext context, Course course, int index, {bool isTopRated = true}) {
     final responsive = context.responsive;
-    final gradientColors = _getCardGradient(index, isTopRated);
+    final universityColors = UniversityAssets.getColors(course.universityId);
 
     return Container(
       width: responsive.cardWidth,
       child: Card(
-        elevation: 3,
-        shadowColor: gradientColors[0].withValues(alpha: 0.4),
+        elevation: 4,
+        shadowColor: universityColors[0].withValues(alpha: 0.4),
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: gradientColors,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background - University image or beautiful gradient
+            UniversityAssets.buildCardBackground(
+              universityId: course.universityId,
+              universityName: course.universityName,
+              imageOpacity: 0.85,
+              showOverlay: false,
             ),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => CourseDetailScreen(course: course),
-                  ),
-                );
-                if (context.mounted) {
-                  context.read<CourseListViewModel>().refreshCourses();
-                }
-              },
-              child: Padding(
-                padding: EdgeInsets.all(responsive.spacing(12)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: responsive.spacing(8),
-                                vertical: responsive.spacing(4),
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                course.facultyShort,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: responsive.sp(10),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: responsive.spacing(6)),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: responsive.spacing(8),
-                                vertical: responsive.spacing(4),
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                course.universityId ?? 'UPM',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: responsive.sp(10),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.star_rounded,
-                              size: responsive.iconSize(16),
-                              color: Colors.amber,
-                            ),
-                            SizedBox(width: responsive.spacing(4)),
-                            Text(
-                              course.averageRating.toStringAsFixed(1),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: responsive.sp(12),
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Spacer(),
-                    Text(
-                      course.id,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: responsive.sp(18),
-                      ),
-                    ),
-                    SizedBox(height: responsive.spacing(4)),
-                    Text(
-                      course.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: responsive.sp(12),
-                        height: 1.2,
-                      ),
-                    ),
-                    SizedBox(height: responsive.spacing(8)),
-                    Text(
-                      "${course.totalReviews} Reviews",
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: responsive.sp(11),
-                      ),
-                    ),
+            // Dark gradient overlay for text readability
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.1),
+                    Colors.black.withValues(alpha: 0.7),
                   ],
+                  stops: const [0.0, 1.0],
                 ),
               ),
             ),
-          ),
+            // Content
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CourseDetailScreen(course: course),
+                    ),
+                  );
+                  if (context.mounted) {
+                    context.read<CourseListViewModel>().refreshCourses();
+                  }
+                },
+                child: Padding(
+                  padding: EdgeInsets.all(responsive.spacing(14)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top row - Tags and Rating
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: responsive.spacing(8),
+                                  vertical: responsive.spacing(4),
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  course.facultyShort,
+                                  style: TextStyle(
+                                    color: universityColors[0],
+                                    fontSize: responsive.sp(10),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: responsive.spacing(6)),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: responsive.spacing(8),
+                                  vertical: responsive.spacing(4),
+                                ),
+                                decoration: BoxDecoration(
+                                  color: universityColors[0],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  course.universityId ?? 'UPM',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: responsive.sp(10),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          // Rating badge
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: responsive.spacing(8),
+                              vertical: responsive.spacing(4),
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.amber,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.star_rounded,
+                                  size: responsive.iconSize(14),
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: responsive.spacing(2)),
+                                Text(
+                                  course.averageRating.toStringAsFixed(1),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: responsive.sp(11),
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      Spacer(),
+                      // Course code
+                      Text(
+                        course.id,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: responsive.sp(20),
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: responsive.spacing(4)),
+                      // Course name
+                      Text(
+                        course.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.95),
+                          fontSize: responsive.sp(12),
+                          height: 1.2,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: responsive.spacing(8)),
+                      // Reviews count
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.rate_review_rounded,
+                            size: responsive.iconSize(14),
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                          SizedBox(width: responsive.spacing(4)),
+                          Text(
+                            "${course.totalReviews} Reviews",
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontSize: responsive.sp(11),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
