@@ -36,7 +36,7 @@ class UniversityAssets {
   // Colors for each university (for gradient backgrounds)
   static const Map<String, List<Color>> _universityColors = {
     'UM': [Color(0xFF003366), Color(0xFF004080)],
-    'UPM': [Color(0xFF006400), Color(0xFF228B22)],
+    'UPM': [Color(0xFF800000), Color(0xFFB00000)],
     'UKM': [Color(0xFF800000), Color(0xFFB22222)],
     'USM': [Color(0xFFFFD700), Color(0xFFFFA500)],
     'UTM': [Color(0xFF8B0000), Color(0xFFCD5C5C)],

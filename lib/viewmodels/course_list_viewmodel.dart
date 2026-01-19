@@ -41,17 +41,29 @@ class CourseListViewModel extends ChangeNotifier {
   Future<void> _fetchLatestReviews() async {
     List<Review> allReviews = [];
 
-    // Fetch reviews from multiple courses (up to 10 courses to get diverse reviews)
-    final coursesToFetch = _courses.take(10).toList();
+    // Sort courses by total reviews (descending) to prioritize active courses
+    // This ensures we get reviews from courses that actually have reviews
+    final sortedCourses = List<Course>.from(_courses)
+      ..sort((a, b) => b.totalReviews.compareTo(a.totalReviews));
 
-    for (var course in coursesToFetch) {
+    // Fetch reviews from courses that have reviews (up to 15 courses for diversity)
+    final coursesToFetch = sortedCourses
+        .where((c) => c.totalReviews > 0)
+        .take(15)
+        .toList();
+
+    // Fetch reviews in parallel for better performance
+    final futures = coursesToFetch.map((course) async {
       try {
-        final reviews = await _apiService.getReviews(course.id, limit: 5);
-        allReviews.addAll(reviews);
+        return await _apiService.getReviews(course.id, limit: 3);
       } catch (e) {
-        // Continue if one course fails
-        continue;
+        return <Review>[];
       }
+    });
+
+    final results = await Future.wait(futures);
+    for (var reviews in results) {
+      allReviews.addAll(reviews);
     }
 
     // Sort by timestamp (newest first) and take top 10

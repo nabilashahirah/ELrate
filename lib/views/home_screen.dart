@@ -646,6 +646,10 @@ class _ReviewCardExpandingState extends State<_ReviewCardExpanding> {
     final course = widget.course;
     final review = widget.review;
 
+    // Get university colors for this course
+    final universityColors = UniversityAssets.getColors(course.universityId);
+    final primaryColor = universityColors[0];
+
     return SizedBox(
       width: responsive.isMobile ? 280 : 320,
       child: Card(
@@ -691,10 +695,7 @@ class _ReviewCardExpandingState extends State<_ReviewCardExpanding> {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF800000),
-                            Color(0xFFA00000),
-                          ],
+                          colors: universityColors,
                         ),
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -720,7 +721,7 @@ class _ReviewCardExpandingState extends State<_ReviewCardExpanding> {
                                   course.id,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF800000),
+                                    color: primaryColor,
                                     fontSize: responsive.sp(10),
                                   ),
                                   maxLines: 1,
@@ -734,14 +735,14 @@ class _ReviewCardExpandingState extends State<_ReviewCardExpanding> {
                                   vertical: responsive.spacing(1),
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFF800000).withValues(alpha: 0.1),
+                                  color: primaryColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(3),
                                 ),
                                 child: Text(
                                   course.facultyShort,
                                   style: TextStyle(
                                     fontSize: responsive.sp(7),
-                                    color: Color(0xFF800000),
+                                    color: primaryColor,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -753,7 +754,7 @@ class _ReviewCardExpandingState extends State<_ReviewCardExpanding> {
                                   vertical: responsive.spacing(1),
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFF800000),
+                                  color: primaryColor,
                                   borderRadius: BorderRadius.circular(3),
                                 ),
                                 child: Text(
@@ -832,7 +833,7 @@ class _ReviewCardExpandingState extends State<_ReviewCardExpanding> {
                     decoration: BoxDecoration(
                       border: Border(
                         left: BorderSide(
-                          color: Color(0xFF800000).withOpacity(0.3),
+                          color: primaryColor.withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),
@@ -858,7 +859,7 @@ class _ReviewCardExpandingState extends State<_ReviewCardExpanding> {
                               "Tap to read more",
                               style: TextStyle(
                                 fontSize: responsive.sp(9),
-                                color: Color(0xFF800000),
+                                color: primaryColor,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -875,11 +876,11 @@ class _ReviewCardExpandingState extends State<_ReviewCardExpanding> {
                     // Student avatar/icon
                     CircleAvatar(
                       radius: responsive.isMobile ? 10 : 12,
-                      backgroundColor: Color(0xFF800000).withOpacity(0.1),
+                      backgroundColor: primaryColor.withValues(alpha: 0.1),
                       child: Icon(
                         review.isAnonymous ? Icons.person_off_outlined : Icons.person,
                         size: responsive.iconSize(12),
-                        color: Color(0xFF800000),
+                        color: primaryColor,
                       ),
                     ),
                     SizedBox(width: responsive.spacing(4)),
