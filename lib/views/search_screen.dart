@@ -62,9 +62,9 @@ class _SearchScreenState extends State<SearchScreen> {
                   floating: true,
                   pinned: true,
                   backgroundColor: Color(0xFF800000),
-                  title: Text(viewModel.isFiltered 
-                      ? "Search Results (${viewModel.filteredCoursesCount})" 
-                      : "All Subjects"),
+                  title: Text(viewModel.isFiltered
+                      ? "Search Results (${viewModel.filteredCoursesCount})"
+                      : "All Courses"),
                   elevation: 0,
                 ),
                 // Search Input
@@ -220,7 +220,7 @@ class _SearchScreenState extends State<SearchScreen> {
             },
             style: TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              hintText: "Search by course code or name...",
+              hintText: "Search by code, name, university, faculty...",
               hintStyle: TextStyle(color: Colors.white70),
               prefixIcon: Icon(Icons.search, color: Colors.white),
               suffixIcon: _searchController.text.isNotEmpty
@@ -278,6 +278,58 @@ class _SearchScreenState extends State<SearchScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // University Filter
+              Row(
+                children: [
+                  Icon(Icons.account_balance, size: responsive.iconSize(16), color: Colors.grey[700]),
+                  SizedBox(width: responsive.spacing(8)),
+                  Text(
+                    "University:",
+                    style: TextStyle(
+                      fontSize: responsive.sp(14),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  SizedBox(width: responsive.spacing(10)),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: viewModel.availableUniversities.map((university) {
+                          final isSelected = viewModel.selectedUniversity == university;
+                          return Padding(
+                            padding: EdgeInsets.only(right: responsive.spacing(8)),
+                            child: FilterChip(
+                              label: Text(university),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                viewModel.updateUniversityFilter(university);
+                              },
+                              selectedColor: Color(0xFF800000),
+                              backgroundColor: Colors.grey[200],
+                              checkmarkColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                side: BorderSide(
+                                  color: Colors.transparent,
+                                ),
+                              ),
+                              labelStyle: TextStyle(
+                                color: isSelected ? Colors.white : Colors.grey[700],
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                fontSize: responsive.sp(12),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: responsive.spacing(12)),
+
               // Faculty Filter
               Row(
                 children: [
@@ -328,7 +380,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: responsive.spacing(15)),
+              SizedBox(height: responsive.spacing(12)),
 
               // Rating Filter
               Row(
@@ -360,6 +412,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
               // Clear Filters Button
               if (viewModel.searchQuery.isNotEmpty ||
+                  viewModel.selectedUniversity != 'All' ||
                   viewModel.selectedFaculty != 'All' ||
                   viewModel.minRating > 0)
                 Align(

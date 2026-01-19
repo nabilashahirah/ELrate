@@ -20,9 +20,13 @@ class AiService {
   }) async {
     try {
       final query = Uri.encodeComponent(
-        'Is "$universityName" (also known as "$shortName") a real university in $country? '
-        'Answer in JSON format: {"isValid": true/false, "confidence": "high/medium/low", '
-        '"reason": "brief explanation", "suggestedName": "correct name if different"}'
+        'Is "$universityName" (abbreviation: "$shortName") a real, accredited university in $country? '
+        'You must respond ONLY with this exact JSON format, nothing else: '
+        '{"isValid": true, "confidence": "high", "reason": "explanation"} '
+        'Use isValid: true if the university exists and is real. '
+        'Use confidence: "high" if you are certain it exists (well-known university). '
+        'Use confidence: "medium" if you think it exists but not 100% sure. '
+        'Use confidence: "low" only if you are very uncertain.'
       );
 
       final response = await http.get(
@@ -63,10 +67,10 @@ class AiService {
   }) async {
     try {
       final query = Uri.encodeComponent(
-        'Is "$courseName" (course code: "$courseCode") a real course in the $faculty faculty '
-        'at $universityName? Answer in JSON format: {"isValid": true/false, '
-        '"confidence": "high/medium/low", "reason": "brief explanation", '
-        '"suggestedName": "correct name if different"}'
+        'Is "$courseName" (code: "$courseCode") a valid academic course for $faculty at a university? '
+        'Respond ONLY in JSON: {"isValid": true/false, "confidence": "high/medium/low", "reason": "brief reason"} '
+        'isValid=true if the course name is a legitimate academic subject (like Programming, Mathematics, Database, etc). '
+        'isValid=false ONLY if the name is clearly fake, nonsense, offensive, or not an academic subject.'
       );
 
       final response = await http.get(
@@ -107,9 +111,7 @@ class AiService {
   }) async {
     try {
       final query = Uri.encodeComponent(
-        'Generate a brief 2-3 sentence academic description for the course "$courseName" '
-        '(code: $courseCode) from the $faculty faculty at $universityName. '
-        'Focus on what students learn and the course objectives. Keep it professional and concise.'
+        'Write ONE short sentence (max 150 characters) describing what the course "$courseName" teaches. No intro, just the description.'
       );
 
       final response = await http.get(
@@ -124,10 +126,12 @@ class AiService {
         description = description.replaceAll(RegExp(r'^```[\s\S]*?```$', multiLine: true), '');
         description = description.replaceAll(RegExp(r'^\*\*.*?\*\*:?\s*', multiLine: true), '');
         description = description.replaceAll(RegExp(r'^#+\s*', multiLine: true), '');
+        description = description.replaceAll(RegExp(r'^"', multiLine: true), '');
+        description = description.replaceAll(RegExp(r'"$', multiLine: true), '');
 
-        // Take first 500 characters max
-        if (description.length > 500) {
-          description = '${description.substring(0, 497)}...';
+        // Take first 200 characters max
+        if (description.length > 200) {
+          description = '${description.substring(0, 197)}...';
         }
 
         return description.trim();
@@ -256,29 +260,65 @@ class AiService {
   /// Parse the AI response into a validation result
   AiValidationResult _parseValidationResponse(String responseBody, String type) {
     try {
+      print('AI Raw Response: $responseBody');
+
       // Try to extract JSON from the response
       final jsonStr = _extractJsonObject(responseBody);
+      print('Extracted JSON: $jsonStr');
 
       if (jsonStr != null) {
         final jsonData = json.decode(jsonStr);
+
+        // Parse isValid - handle both boolean and string
+        bool isValid = false;
+        if (jsonData['isValid'] is bool) {
+          isValid = jsonData['isValid'];
+        } else if (jsonData['isValid'] is String) {
+          isValid = jsonData['isValid'].toString().toLowerCase() == 'true';
+        }
+
+        // Parse confidence - normalize to lowercase
+        String confidence = (jsonData['confidence'] ?? 'medium').toString().toLowerCase();
+        // Ensure it's a valid value
+        if (!['high', 'medium', 'low'].contains(confidence)) {
+          confidence = 'medium';
+        }
+
+        print('Parsed - isValid: $isValid, confidence: $confidence');
+
         return AiValidationResult(
-          isValid: jsonData['isValid'] ?? true,
-          confidence: jsonData['confidence'] ?? 'medium',
-          reason: jsonData['reason'] ?? 'Validation completed.',
-          suggestedName: jsonData['suggestedName'],
+          isValid: isValid,
+          confidence: confidence,
+          reason: jsonData['reason']?.toString() ?? 'Validation completed.',
+          suggestedName: jsonData['suggestedName']?.toString(),
         );
       }
 
       // If no JSON found, analyze the text response
       final lowerBody = responseBody.toLowerCase();
-      final isValid = !lowerBody.contains('not a real') &&
-                      !lowerBody.contains('does not exist') &&
-                      !lowerBody.contains('cannot find') &&
-                      !lowerBody.contains('no such');
+
+      // Check for positive indicators
+      final hasPositiveIndicators = lowerBody.contains('yes') ||
+                                    lowerBody.contains('is a real') ||
+                                    lowerBody.contains('does exist') ||
+                                    lowerBody.contains('is an accredited') ||
+                                    lowerBody.contains('is a recognized') ||
+                                    lowerBody.contains('is a legitimate');
+
+      // Check for negative indicators
+      final hasNegativeIndicators = lowerBody.contains('not a real') ||
+                                    lowerBody.contains('does not exist') ||
+                                    lowerBody.contains('cannot find') ||
+                                    lowerBody.contains('no such') ||
+                                    lowerBody.contains('is not') ||
+                                    lowerBody.contains('fake') ||
+                                    lowerBody.contains('not recognized');
+
+      final isValid = hasPositiveIndicators && !hasNegativeIndicators;
 
       return AiValidationResult(
         isValid: isValid,
-        confidence: 'medium',
+        confidence: isValid ? 'high' : 'medium',
         reason: responseBody.length > 200
             ? '${responseBody.substring(0, 197)}...'
             : responseBody,
