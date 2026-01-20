@@ -25,7 +25,7 @@ class _MainNavigationState extends State<MainNavigation> {
     final responsive = context.responsive;
     final screens = [
       HomeScreen(
-        onSeeAll: () => _switchToTab(1), // Switch to Subjects tab
+        onSeeAll: () => _switchToTab(1), // Switch to Courses tab
       ),
       SearchScreen(),
       ProfileScreen(),
@@ -64,7 +64,7 @@ class _MainNavigationState extends State<MainNavigation> {
             NavigationDestination(
               icon: Icon(Icons.menu_book_outlined),
               selectedIcon: Icon(Icons.menu_book_rounded),
-              label: 'Subjects',
+              label: 'Courses',
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline_rounded),

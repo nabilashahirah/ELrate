@@ -100,47 +100,54 @@ class _LoginScreenState extends State<LoginScreen> {
                                 children: [
                                   // Logo
                                   Container(
-                                    padding: EdgeInsets.all(responsive.spacing(16)),
+                                    padding: EdgeInsets.all(responsive.spacing(20)),
                                     decoration: BoxDecoration(
-                                      color: Color(0xFF800000).withOpacity(0.1),
+                                      color: Color(0xFF800000).withValues(alpha: 0.08),
                                       shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Color(0xFF800000).withValues(alpha: 0.1),
+                                          blurRadius: 20,
+                                          spreadRadius: 5,
+                                        ),
+                                      ],
                                     ),
                                     child: Image.asset(
                                       'assets/logo.png',
-                                      width: responsive.logoSize * 0.6,
-                                      height: responsive.logoSize * 0.6,
+                                      width: responsive.logoSize * 0.5,
+                                      height: responsive.logoSize * 0.5,
                                       color: Color(0xFF800000),
                                     ),
                                   ),
-                                  SizedBox(height: responsive.spacing(16)),
+                                  SizedBox(height: responsive.spacing(24)),
 
-                                  // Branding Name (Requested)
-                                  Text(
-                                    "ELrate@UPM",
-                                    style: TextStyle(
-                                      fontSize: responsive.sp(16),
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF800000).withOpacity(0.7),
-                                      letterSpacing: 1.5,
-                                    ),
-                                  ),
-                                  SizedBox(height: responsive.spacing(8)),
-                                  
                                   // Header
                                   Text(
-                                    "Welcome Back",
+                                    "Welcome to",
                                     style: TextStyle(
-                                      fontSize: responsive.sp(28),
+                                      fontSize: responsive.sp(16),
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  SizedBox(height: responsive.spacing(4)),
+
+                                  // Branding Name
+                                  Text(
+                                    "ELRate",
+                                    style: TextStyle(
+                                      fontSize: responsive.sp(32),
                                       fontWeight: FontWeight.bold,
                                       color: Color(0xFF800000),
+                                      letterSpacing: 1.0,
                                     ),
                                   ),
                                   SizedBox(height: responsive.spacing(8)),
                                   Text(
-                                    "Login to continue",
+                                    "Sign in to continue",
                                     style: TextStyle(
                                       fontSize: responsive.sp(14),
-                                      color: Colors.grey[600],
+                                      color: Colors.grey[500],
                                     ),
                                   ),
                                   SizedBox(height: responsive.spacing(32)),
