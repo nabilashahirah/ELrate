@@ -8,6 +8,8 @@ import '../models/review.dart';
 import '../models/course.dart';
 import '../services/api_service.dart';
 import 'course_detail_screen.dart';
+import '../viewmodels/course_list_viewmodel.dart';
+import '../utils/university_assets.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -456,6 +458,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildReviewCard(Review review) {
     final responsive = context.responsive;
 
+    // Get university colors based on course ID
+    final courseList = context.watch<CourseListViewModel>().courses;
+    String? universityId;
+    try {
+      final course = courseList.firstWhere((c) => c.id == review.courseId);
+      universityId = course.universityId;
+    } catch (_) {}
+
+    final universityColors = UniversityAssets.getColors(universityId);
+    final primaryColor = universityColors[0];
+
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
@@ -520,10 +533,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [
-                                Color(0xFF800000),
-                                Color(0xFFA00000),
-                              ],
+                              colors: universityColors,
                             ),
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -547,7 +557,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 review.courseId,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF800000),
+                                  color: primaryColor,
                                   fontSize: responsive.sp(14),
                                 ),
                               ),
@@ -635,7 +645,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 decoration: BoxDecoration(
                   border: Border(
                     left: BorderSide(
-                      color: Color(0xFF800000).withOpacity(0.3),
+                      color: primaryColor.withOpacity(0.3),
                       width: 3,
                     ),
                   ),
