@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'onboarding_screen.dart';
 import 'auth/login_screen.dart';
-
 import '../utils/responsive.dart';
 class SplashIntroScreen extends StatefulWidget {
   const SplashIntroScreen({Key? key}) : super(key: key);
@@ -170,12 +170,25 @@ class _SplashIntroScreenState extends State<SplashIntroScreen> with SingleTicker
                           width: double.infinity,
                           height: responsive.buttonHeight,
                           child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => LoginScreen()),
-                              );
+                            onPressed: () async {
+                              // Check if user has completed onboarding before
+                              final hasCompleted = await OnboardingScreen.hasCompletedOnboarding();
+
+                              if (!context.mounted) return;
+
+                              if (hasCompleted) {
+                                // Skip onboarding, go directly to login
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                                );
+                              } else {
+                                // First time user, show onboarding
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+                                );
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,

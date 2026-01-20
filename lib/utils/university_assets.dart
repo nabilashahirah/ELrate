@@ -8,8 +8,8 @@ class UniversityAssets {
   static const Map<String, String> _universityImages = {
     'UM': 'https://drive.google.com/uc?export=view&id=1XHGchaAnPcPlZ1BL3vD-cMpgLTeJl3D0',
     'UPM': 'https://drive.google.com/uc?export=view&id=1JjDWNPKkS3osFjYXGodN0H7DJLdOAJL9',
-    'UKM': 'https://www.ukm.my/portal/wp-content/uploads/2019/03/UKM-CANSELORI.jpg',
-    'USM': 'https://www.usm.my/images/headers/usm-main-campus.jpg',
+    'UKM': 'https://drive.google.com/uc?export=view&id=d/1w-ybtWHeeolkv_oWLOjuXwxGWFDfqKtd',
+    'USM': 'https://drive.google.com/uc?export=view&id=1W8Xgm7j4fgPDzSmy6rEpgStoJTGITsKe',
     'UTM': 'https://www.utm.my/wp-content/uploads/2019/10/MENARA-UTM.jpg',
     'UiTM': 'https://www.uitm.edu.my/images/stories/gallery/shah-alam-campus.jpg',
     'UITM': 'https://www.uitm.edu.my/images/stories/gallery/shahy-alam-campus.jpg',
