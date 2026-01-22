@@ -12,7 +12,6 @@ class ApiService {
   static const String _getCoursesUrl = AppConstants.getCoursesUrl;
   static const String _submitReviewUrl = AppConstants.submitReviewUrl;
   static const String _getReviewsUrl = AppConstants.getReviewsUrl;
-  static const String _getHarshWordsUrl = AppConstants.getHarshWordsUrl;
   static const String _getUniversitiesUrl = AppConstants.getUniversitiesUrl;
   static const String _addUniversityUrl = AppConstants.addUniversityUrl;
   static const String _addCourseUrl = AppConstants.addCourseUrl;
@@ -89,7 +88,7 @@ class ApiService {
       );
 
       if (response.statusCode == 400) {
-        // Backend validation error (e.g., harsh words)
+        // Backend validation error
         final errorData = json.decode(response.body);
         throw Exception(errorData['error'] ?? 'Invalid review. Please check your input.');
       } else if (response.statusCode != 200 && response.statusCode != 201) {
@@ -102,29 +101,6 @@ class ApiService {
     } catch (e) {
       if (e is Exception && e.toString().contains('Exception:')) rethrow;
       throw Exception('Unable to submit review. Please try again later.');
-    }
-  }
-
-  /// Fetch list of harsh words for content moderation
-  Future<List<String>> getHarshWords() async {
-    try {
-      final response = await http.get(
-        Uri.parse(_getHarshWordsUrl),
-        headers: {"Content-Type": "application/json"},
-      ).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonData = json.decode(response.body);
-        return jsonData.map((e) => e.toString()).toList();
-      } else {
-        // Return empty list if API fails - backend will still validate
-        // This prevents exposing the word list in the app
-        return [];
-      }
-    } catch (e) {
-      // Return empty list on error - backend will still validate
-      // Security: Do NOT expose the harsh words list in client code
-      return [];
     }
   }
 
